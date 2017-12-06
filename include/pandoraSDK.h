@@ -72,6 +72,7 @@ public:
 	~PandoraSDK();
 	int start();
 	void stop();
+	void destoryLidarThread();
 	void setupCameraClient();
 	void setupLidarClient();
 	void lidarTask();
@@ -87,13 +88,14 @@ public:
 
 private:
 	pthread_t lidarThread;
+	boost::thread lidarBoostThread;
 	bool continueLidarThread;
 	pthread_mutex_t gpsLock;
 	std::string ip;
 	int cport;
 	int lport;
 	int lidarRotationStartAngle;
-	PandoraClient* pandoraClient;
+	void* pandoraClient;
 	HS_LIDAR_L40_GPS_Packet hesaiGps;
   time_t gps1;
   gps_struct_t gps2;

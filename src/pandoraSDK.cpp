@@ -66,13 +66,13 @@ void PandoraSDK::loadIntrinsics(std::string& intrinsicFile)
 
 void PandoraSDK::setupCameraClient()
 {
-	pandoraClient = (PandoraClient*)PandoraClientNew(ip.c_str(), cport, PandoraSDK::cameraClientCallback, this);
+	pandoraClient = PandoraClientNew(ip.c_str(), cport, PandoraSDK::cameraClientCallback, this);
 }
 
 void PandoraSDK::setupLidarClient()
 {
 	// int ret = pthread_create(&lidarThread, NULL, (void*)lidarTask, (void*)this);
-	boost::thread processThr(boost::bind(&PandoraSDK::lidarTask, this));
+	lidarBoostThread = boost::thread(boost::bind(&PandoraSDK::lidarTask, this));
 }
 
 int PandoraSDK::start()
@@ -84,8 +84,14 @@ int PandoraSDK::start()
 
 void PandoraSDK::stop()
 {
-	pandoraClient->exit = 1;
+	PandoraCLientDestroy(pandoraClient);
+	destoryLidarThread();
+}
+
+void PandoraSDK::destoryLidarThread()
+{
 	continueLidarThread = false;
+	lidarBoostThread.join();
 }
 
 void PandoraSDK::lidarTask()
