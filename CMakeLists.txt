@@ -1,18 +1,37 @@
-cmake_minimum_required(VERSION 3.5)
+#cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 2.8)
+project(pandoraSDK)
+find_package( OpenCV REQUIRED )
+find_package( Boost REQUIRED )
+find_package(PCL REQUIRED )
 
-add_executable(pandar_driver
-	src/main.c
-	src/pandar_driver.cpp
-)
+set (CMAKE_CXX_STANDARD 11)
 
-target_link_libraries(pandar_driver
-	pthread
+add_library(${PROJECT_NAME}
+	src/pandoraSDK.cpp
 )
 
 include_directories(
 	include
+	src/pandora_camera_client/include
+	${Boost_INCLUDE_DIRS}
+	${PCL_INCLUDE_DIRS}
+
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g" )
+#link_directories(${PCL_LIBRARY_DIRS})
+#add_definitions(${PCL_DEFINITIONS})
 
-install(PROGRAMS ${CMAKE_BINARY_DIR}/pandar_control DESTINATION bin)
+
+add_subdirectory(src/pandora_camera_client)
+add_subdirectory(src/lib)
+
+target_link_libraries(pandoraSDK
+	pandar_input
+	pandar_rawdata
+	pthread
+	pandora_client
+	${OpenCV_LIBS}
+	${Boost_LIBRARIES}
+	${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES}
+)
