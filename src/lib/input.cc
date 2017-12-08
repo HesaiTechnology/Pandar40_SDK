@@ -9,15 +9,23 @@
 #include "input.h"
 #include <string.h>
 
+#include <iostream>
+
 namespace pandar_pointcloud
 {
 static const size_t packet_size = sizeof(PandarPacket().data);
+
+Input::Input( uint16_t port):
+  port_(port)
+{
+}
 
 /** @brief constructor
    *
    *  @param port UDP port number
    */
-InputSocket::InputSocket(uint16_t port) : port_(port)
+
+InputSocket::InputSocket(uint16_t port) : Input(port)
 {
   devip_str_ = "";
   sockfd_ = -1;
@@ -101,7 +109,7 @@ int InputSocket::getPacket(PandarPacket *pkt, const double time_offset)
       }
       if (retval == 0) // poll() timeout?
       {
-        printf("Pandar poll() timeout");
+        perror("Pandar poll() timeout");
         return 1;
       }
       if ((fds[0].revents & POLLERR) || (fds[0].revents & POLLHUP) || (fds[0].revents & POLLNVAL)) // device error?
@@ -110,13 +118,15 @@ int InputSocket::getPacket(PandarPacket *pkt, const double time_offset)
         return 1;
       }
     } while ((fds[0].revents & POLLIN) == 0);
-
+    sender_address_len = sizeof(sender_address);
     // Receive packets that should now be available from the
     // socket using a blocking read.
     ssize_t nbytes = recvfrom(sockfd_, &pkt->data[0],
                               packet_size, 0,
                               (sockaddr *)&sender_address,
                               &sender_address_len);
+
+    // std::cout<<"Len: " << sender_address_len << std::endl;
 
     if (nbytes < 0)
     {

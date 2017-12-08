@@ -9,33 +9,51 @@
 
 namespace pandar_pointcloud
 {
-  static uint16_t DATA_PORT_NUMBER = 8080;     // default data port
-  static uint16_t POSITION_PORT_NUMBER = 8308; // default position port
+static uint16_t DATA_PORT_NUMBER = 8080;     // default data port
+static uint16_t POSITION_PORT_NUMBER = 8308; // default position port
 
-  // typedef struct PandarPacket
-  // {
-  //   double stamp;
-  //   unsigned char data[1240];
-  // }PandarPacket;
+// typedef struct PandarPacket
+// {
+//   double stamp;
+//   unsigned char data[1240];
+// }PandarPacket;
 
+class Input
+{
+public:
+  Input(uint16_t port);
+  virtual ~Input() {}
+  /** @brief Read one pandar packet.
+   *
+   * @param pkt points to pandarPacket message
+   *
+   * @returns 0 if successful,
+   *          -1 if end of file
+   *          > 0 if incomplete packet (is this possible?)
+   */
+  virtual int getPacket(PandarPacket *pkt,
+                        const double time_offset) = 0;
 
-  class InputSocket
-  {
-  public:
-    InputSocket(uint16_t port = DATA_PORT_NUMBER);
-    virtual ~InputSocket();
+protected:
+  uint16_t port_;
+  std::string devip_str_;
+};
 
-    virtual int getPacket(PandarPacket *pkt, 
-                          const double time_offset);
-    void setDeviceIP( const std::string& ip );
+class InputSocket:public Input
+{
+public:
+  InputSocket(uint16_t port = DATA_PORT_NUMBER);
+  virtual ~InputSocket();
 
-  private:
-    int sockfd_;
-    uint16_t port_;
-    std::string devip_str_;
-    in_addr devip_;
-    struct timeval start_time_getpacket, stop_time_getpacket;
-  };
+  virtual int getPacket(PandarPacket *pkt,
+                        const double time_offset);
+  void setDeviceIP(const std::string &ip);
+
+private:
+  int sockfd_;
+  in_addr devip_;
+  struct timeval start_time_getpacket, stop_time_getpacket;
+};
 
 } // pandar_driver namespace
 

@@ -46,6 +46,11 @@ static double laser_offset[LASER_COUNT];
 RawData::RawData(std::string& correctionFile)
 {
     config_.calibrationFile = correctionFile;
+    config_.min_angle = 0;
+    config_.max_angle = 36000;
+    config_.min_range = 0.5;
+    config_.max_range = 250.0;
+
     bufferPacket = new raw_packet_t[1000];
     bufferPacketSize = 0;
     lastBlockEnd = 0;
@@ -135,63 +140,21 @@ void RawData::setParameters(double min_range,
 /** Set up for on-line operation. */
 int RawData::setup()
 {
-    // get path to angles.config file for this device
-    // if (!private_nh.getParam("calibration", config_.calibrationFile))
-    // {
-    //     ROS_ERROR_STREAM("No calibration angles specified! Using default values!");
-
-    //     std::string pkgPath = ros::package::getPath("pandar_pointcloud");
-    //     config_.calibrationFile = pkgPath + "/params/Lidar-Correction-18.csv";
-    // }
-
-    // ROS_INFO_STREAM("correction angles: " << config_.calibrationFile);
+    printf("rawdata setup\n");
     calibration_.read(config_.calibrationFile);
     if (!calibration_.initialized) {
         printf("Unable to open calibration file: %s", config_.calibrationFile.c_str());
         return -1;
     }
 
-    // ROS_INFO_STREAM("Number of lasers: " << calibration_.num_lasers << ".");
-
-    // Set up cached values for sin and cos of all the possible headings
     for (uint16_t rot_index = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
         float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
+        // printf("rotation: %d, %f, %f\n", rot_index, rotation, cosf(rotation));
         cos_lookup_table_[rot_index] = cosf(rotation);
         sin_lookup_table_[rot_index] = sinf(rotation);
     }
     return 0;
 }
-
-
-/** Set up for offline operation */
-// int RawData::setupOffline(std::string calibration_file, double max_range_, double min_range_)
-// {
-
-//     config_.max_range = max_range_;
-//     config_.min_range = min_range_;
-//     ROS_INFO_STREAM("data ranges to publish: ["
-//                     << config_.min_range << ", "
-//                     << config_.max_range << "]");
-
-//     config_.calibrationFile = calibration_file;
-
-//     ROS_INFO_STREAM("correction angles: " << config_.calibrationFile);
-
-//     calibration_.read(config_.calibrationFile);
-//     if (!calibration_.initialized) {
-//         ROS_ERROR_STREAM("Unable to open calibration file: " <<
-//                          config_.calibrationFile);
-//         return -1;
-//     }
-
-//     // Set up cached values for sin and cos of all the possible headings
-//     for (uint16_t rot_PPointCloudindex = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
-//         float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
-//         cos_lookup_table_[rot_index] = cosf(rotation);
-//         sin_lookup_table_[rot_index] = sinf(rotation);
-//     }
-//     return 0;
-// }
 
 int RawData::parseRawData(raw_packet_t* packet, const uint8_t* buf, const int len)
 {
@@ -213,6 +176,8 @@ int RawData::parseRawData(raw_packet_t* packet, const uint8_t* buf, const int le
             measure.range = (buf[index]& 0xff)
 				| ((buf[index + 1]& 0xff) << 8)
 				| ((buf[index + 2]& 0xff) << 16 );
+            // printf("%d, %d, %d\n", buf[index], buf[index + 1], buf[index + 2]);
+            // printf("parseRawData measure.range: %d, %d\n", j, measure.range);
             measure.reflectivity = (buf[index + 3]& 0xff)
 				| ((buf[index + 4]& 0xff) << 8);
 
@@ -244,6 +209,7 @@ void RawData::computeXYZIR(PPoint& point, int azimuth,
 		const raw_measure_t& laserReturn, const pandar_pointcloud::PandarLaserCorrection& correction)
 {
     double cos_azimuth, sin_azimuth;
+    // printf("computerXYZIR laserRetrun range: %d\n", laserReturn.range);
     double distanceM = laserReturn.range * 0.002;
 
     point.intensity = static_cast<float> (laserReturn.reflectivity >> 8);
@@ -265,7 +231,8 @@ void RawData::computeXYZIR(PPoint& point, int azimuth,
     }
 
     distanceM += correction.distanceCorrection;
-
+    // printf("distanceM: %f\n", distanceM);
+    // printf("correction.cosVertCorrection: %f\n", correction.cosVertCorrection);
     double xyDistance = distanceM * correction.cosVertCorrection;
 
     point.x = static_cast<float> (xyDistance * sin_azimuth - correction.horizontalOffsetCorrection * cos_azimuth);
@@ -385,6 +352,7 @@ void RawData::toPointClouds (raw_packet_t* packet,int block ,  PPointCloud& pc ,
         //     }
         // }
             PPoint xyzir;
+            // printf("firing_data.measures[i]: %f\n", firing_data.measures[i]);
             computeXYZIR (xyzir, firing_data.azimuth,
                     firing_data.measures[i], calibration_.laser_corrections[i]);
             if (pcl_isnan (xyzir.x) || pcl_isnan (xyzir.y) || pcl_isnan (xyzir.z))
@@ -400,7 +368,6 @@ void RawData::toPointClouds (raw_packet_t* packet,int block ,  PPointCloud& pc ,
                 first = 1;
             }
             
-
             xyzir.ring = i;
             pc.points.push_back(xyzir);
             pc.width++;
@@ -429,7 +396,11 @@ int RawData::unpack(PandarPacket &packet, PPointCloud &pc, time_t& gps1 ,
                                             gps_struct_t &gps2 , double& firstStamp, int& lidarRotationStartAngle)
 {
     currentPacketStart = bufferPacketSize == 0 ? 0 :bufferPacketSize -1 ;
-
+    // for(int mi = 0; mi < 1240; ++mi)
+    // {
+    //     printf("%d, %d\n", mi, packet.data[mi]);
+    // }
+    // return 0;
     parseRawData(&bufferPacket[bufferPacketSize++], &packet.data[0], 1240);
 
     int hasAframe = 0;
@@ -492,7 +463,6 @@ int RawData::unpack(PandarPacket &packet, PPointCloud &pc, time_t& gps1 ,
 
     if(hasAframe)
     {
-
         int first = 0;
         int j = 0;
         for (int k = 0; k < (currentPacketEnd + 1); ++k)

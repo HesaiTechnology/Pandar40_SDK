@@ -5,7 +5,7 @@
 typedef struct PandarPacket_s
 {
   double stamp;
-  unsigned char data[1240];
+  uint8_t data[1240];
 }PandarPacket;
 
 typedef struct gps_struct{

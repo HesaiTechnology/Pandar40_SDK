@@ -25,13 +25,22 @@ include_directories(
 
 add_subdirectory(src/pandora_camera_client)
 add_subdirectory(src/lib)
+#add_subdirectory(test)
 
 target_link_libraries(pandoraSDK
 	pandar_input
 	pandar_rawdata
 	pthread
 	pandora_client
+	yaml-cpp
 	${OpenCV_LIBS}
 	${Boost_LIBRARIES}
 	${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES}
+)
+
+add_executable(pandora_sdk_test 
+	src/test.cc
+)
+target_link_libraries(pandora_sdk_test 
+	${PROJECT_NAME}
 )
