@@ -9,14 +9,6 @@
 
 namespace pandar_pointcloud
 {
-static uint16_t DATA_PORT_NUMBER = 8080;     // default data port
-static uint16_t POSITION_PORT_NUMBER = 8308; // default position port
-
-// typedef struct PandarPacket
-// {
-//   double stamp;
-//   unsigned char data[1240];
-// }PandarPacket;
 
 class Input
 {
@@ -32,7 +24,7 @@ public:
    *          > 0 if incomplete packet (is this possible?)
    */
   virtual int getPacket(PandarPacket *pkt,
-                        const double time_offset) = 0;
+                        const double timeOffset) = 0;
 
 protected:
   uint16_t port_;
@@ -42,17 +34,17 @@ protected:
 class InputSocket:public Input
 {
 public:
-  InputSocket(uint16_t port = DATA_PORT_NUMBER);
+  InputSocket(uint16_t port);
   virtual ~InputSocket();
 
   virtual int getPacket(PandarPacket *pkt,
-                        const double time_offset);
+                        const double timeOffset);
   void setDeviceIP(const std::string &ip);
 
 private:
   int sockfd_;
   in_addr devip_;
-  struct timeval start_time_getpacket, stop_time_getpacket;
+  struct timeval getPacketStartTime, getPacketStopTime;
 };
 
 } // pandar_driver namespace

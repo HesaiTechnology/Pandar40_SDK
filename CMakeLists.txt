@@ -6,9 +6,9 @@ find_package( Boost REQUIRED )
 find_package(PCL REQUIRED )
 
 set (CMAKE_CXX_STANDARD 11)
-
+set (CMAKE_CXX_FLAGS "-g")
 add_library(${PROJECT_NAME}
-	src/pandoraSDK.cpp
+	src/pandoraSDK.cc
 )
 
 include_directories(

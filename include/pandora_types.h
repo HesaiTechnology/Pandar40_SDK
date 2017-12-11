@@ -8,9 +8,9 @@ typedef struct PandarPacket_s
   uint8_t data[1240];
 }PandarPacket;
 
-typedef struct gps_struct{
+typedef struct GPS_STRUCT_{
     int used;
     time_t gps;
-}gps_struct_t;
+}GPS_STRUCT_T;
 
 #endif

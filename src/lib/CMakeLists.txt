@@ -1,10 +1,3 @@
-#include_directories(
-#	../../../include
-#)
-
-message("hello")
-
-message("${INCLUDE_DIRECTORIES}")
 
 add_library(pandar_rawdata rawdata.cc calibration.cc)
 target_link_libraries(pandar_rawdata 
@@ -15,8 +8,3 @@ set_target_properties(pandar_rawdata PROPERTIES
 
 
 add_library(pandar_input input.cc)
-target_link_libraries(pandar_input
-  ${libpcap_LIBRARIES}
-)
-
-add_library(angle angles.cc)

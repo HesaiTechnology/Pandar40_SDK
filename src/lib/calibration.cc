@@ -1,26 +1,16 @@
-/**
- * \file  calibration.cc
- * \brief
- *
- * \author  Piyush Khandelwal (piyushk@cs.utexas.edu)
- * \author Yang Sheng
- * Copyright (C) 2012, Austin Robot Technology,
- *                     The University of Texas at Austin
- *  Copyright (c) 2017 Hesai Photonics Technology, Yang Sheng
- *
- * License: Modified BSD License
- *
- * $ Id: 02/14/2012 11:36:36 AM piyushk $
- */
-
 #include <iostream>
 #include <fstream>
 #include <limits>
-
 #include <boost/filesystem.hpp>
 #include "calibration.h"
 
-// #include <angles/angles.h>
+namespace angles
+{
+double from_degrees(double degrees)
+{
+    return degrees * M_PI / 180;
+}
+}
 
 namespace pandar_pointcloud
 {
@@ -36,8 +26,7 @@ static const float hesai_elev_angle_map[] = {
     -4.321, -4.657, -4.986, -5.311,
     -5.647, -5.974, -6.957, -7.934,
     -8.908, -9.871, -10.826, -11.772,
-    -12.705, -13.63, -14.543, -15.444
-};
+    -12.705, -13.63, -14.543, -15.444};
 
 // Line 40 Lidar azimuth Horizatal offset ,  Line 1 - Line 40
 static const float hesai_horizatal_azimuth_offset_map[] = {
@@ -50,78 +39,71 @@ static const float hesai_horizatal_azimuth_offset_map[] = {
     4.958, -2.478, 2.488, 4.956,
     -2.477, 2.487, 2.485, 2.483,
     0.004, 0.004, 0.003, 0.003,
-    -2.466, -2.463, -2.46, -2.457
-};
+    -2.466, -2.463, -2.46, -2.457};
 
-void Calibration::setDefaultCorrections ()
+void Calibration::setDefaultCorrections()
 {
-    for (int i = 0; i < laser_count; i++)
+    for (int i = 0; i < laserNumber; i++)
     {
-        laser_corrections[i].azimuthCorrection = hesai_horizatal_azimuth_offset_map[i];
-        laser_corrections[i].distanceCorrection = 0.0;
-        laser_corrections[i].horizontalOffsetCorrection = 0.0;
-        laser_corrections[i].verticalOffsetCorrection = 0.0;
-        laser_corrections[i].verticalCorrection = hesai_elev_angle_map[i];
-        laser_corrections[i].sinVertCorrection = std::sin (hesai_elev_angle_map[i] / 180.0 * M_PI);
-        laser_corrections[i].cosVertCorrection = std::cos (hesai_elev_angle_map[i] / 180.0 * M_PI);
+        laserCorrections[i].azimuthCorrection = hesai_horizatal_azimuth_offset_map[i];
+        laserCorrections[i].distanceCorrection = 0.0;
+        laserCorrections[i].horizontalOffsetCorrection = 0.0;
+        laserCorrections[i].verticalOffsetCorrection = 0.0;
+        laserCorrections[i].verticalCorrection = hesai_elev_angle_map[i];
+        laserCorrections[i].sinVertCorrection = std::sin(hesai_elev_angle_map[i] / 180.0 * M_PI);
+        laserCorrections[i].cosVertCorrection = std::cos(hesai_elev_angle_map[i] / 180.0 * M_PI);
     }
 }
 
-void Calibration::read(const std::string& calibration_file) 
+void Calibration::read(const std::string &calibrationFile)
 {
-	initialized = true;
-	num_lasers = laser_count;
-    setDefaultCorrections ();
-    if (calibration_file.empty ())
+    initialized = true;
+    setDefaultCorrections();
+    if (calibrationFile.empty())
         return;
 
-    boost::filesystem::path file_path(calibration_file);
-    if (!boost::filesystem::is_regular(file_path)) {
-        file_path = boost::filesystem::path("pandar40.csv");
-        if (!boost::filesystem::is_regular(file_path))
-            return;
+    boost::filesystem::path filePath(calibrationFile);
+    if (!boost::filesystem::is_regular(filePath))
+    {   printf("invalid lidar correction file, use default values\n");
+        return;
     }
 
-    std::ifstream ifs(file_path.string());
+    std::ifstream ifs(filePath.string());
     if (!ifs.is_open())
         return;
 
     std::string line;
-    if (std::getline(ifs, line)) {	// first line "Laser id,Elevation,Azimuth"
+    if (std::getline(ifs, line))
+    { // first line "Laser id,Elevation,Azimuth"
         std::cout << "parsing correction file." << std::endl;
     }
 
     int line_cnt = 0;
-    while (std::getline(ifs, line)) {
+    while (std::getline(ifs, line))
+    {
         if (line_cnt++ >= 40)
             break;
 
-        int line_id = 0;
+        int lineId = 0;
         double elev, azimuth;
 
         std::stringstream ss(line);
         std::string subline;
         std::getline(ss, subline, ',');
-        std::stringstream(subline) >> line_id;
+        std::stringstream(subline) >> lineId;
         std::getline(ss, subline, ',');
         std::stringstream(subline) >> elev;
         std::getline(ss, subline, ',');
         std::stringstream(subline) >> azimuth;
-        line_id--;
-        laser_corrections[line_id].azimuthCorrection = azimuth;
-        laser_corrections[line_id].distanceCorrection = 0.0;
-        laser_corrections[line_id].horizontalOffsetCorrection = 0.0;
-        laser_corrections[line_id].verticalOffsetCorrection = 0.0;
-        laser_corrections[line_id].verticalCorrection = elev;
-        // laser_corrections[line_id].sinVertCorrection = std::sin (angles::from_degrees(elev));
-        // laser_corrections[line_id].cosVertCorrection = std::cos (angles::from_degrees(elev));
-        laser_corrections[line_id].sinVertCorrection = std::sin ((elev));
-        laser_corrections[line_id].cosVertCorrection = std::cos ((elev));
-
+        lineId--;
+        laserCorrections[lineId].azimuthCorrection = azimuth;
+        laserCorrections[lineId].distanceCorrection = 0.0;
+        laserCorrections[lineId].horizontalOffsetCorrection = 0.0;
+        laserCorrections[lineId].verticalOffsetCorrection = 0.0;
+        laserCorrections[lineId].verticalCorrection = elev;
+        laserCorrections[lineId].sinVertCorrection = std::sin(angles::from_degrees(elev));
+        laserCorrections[lineId].cosVertCorrection = std::cos(angles::from_degrees(elev));
     }
-}
-
-void Calibration::write(const std::string& calibration_file) {
 }
 
 } /* pandar_pointcloud */
