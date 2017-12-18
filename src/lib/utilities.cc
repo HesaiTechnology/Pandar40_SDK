@@ -1,3 +1,14 @@
+
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <boost/lexical_cast.hpp>
+#include "utilities.h"
+#include "yaml-cpp/yaml.h"
+#include <jpeglib.h>
+
+
 void conv_yuv400_to_mat(cv::Mat &dst, void *pYUV400, int nWidth, int nHeight, int bit_depth)
 {
 	IplImage *yimg;
@@ -121,4 +132,70 @@ bool load_camera_intrinsics(const std::string &filename, std::vector<cv::Mat> &c
 		}
 	}
 	return true;
+}
+
+
+void my_output_message (j_common_ptr ptr)
+{
+  return;
+}
+
+void print_mem(unsigned char* mem , unsigned int size)
+{
+	int i =0;
+	for(i = 0 ; i < size ; i++)
+	{
+		printf("%02x " , mem[i]);
+	}
+	printf("\n");
+}
+
+int decompressJpeg(unsigned char *jpg_buffer, unsigned long jpg_size, unsigned char * &bmp, unsigned long& bmpSize)
+{
+  // Variables for the decompressor itself
+  struct jpeg_decompress_struct cinfo;
+  struct jpeg_error_mgr jerr;
+
+  unsigned char *bmp_buffer;
+  int row_stride, width, height, pixel_size;
+
+  cinfo.err = jpeg_std_error(&jerr);
+  cinfo.err->output_message = my_output_message;
+	cinfo.err->error_exit = my_output_message;
+
+	// print_mem(jpg_buffer + (jpg_size - 16) , 16);
+
+  jpeg_create_decompress(&cinfo);
+
+  jpeg_mem_src(&cinfo, jpg_buffer, jpg_size);
+
+  int rc = jpeg_read_header(&cinfo, TRUE);
+
+  if (rc != 1)
+  {
+    return -1;
+  }
+
+  jpeg_start_decompress(&cinfo);
+
+  width = cinfo.output_width;
+  height = cinfo.output_height;
+  pixel_size = cinfo.output_components;
+
+  bmpSize = width * height * pixel_size;
+  bmp_buffer = (unsigned char *)malloc(bmpSize);
+  row_stride = width * pixel_size;
+
+  while (cinfo.output_scanline < cinfo.output_height)
+  {
+    unsigned char *buffer_array[1];
+    buffer_array[0] = bmp_buffer +
+                      (cinfo.output_scanline) * row_stride;
+
+    jpeg_read_scanlines(&cinfo, buffer_array, 1);
+  }
+  bmp = bmp_buffer;
+  jpeg_finish_decompress(&cinfo);
+  jpeg_destroy_decompress(&cinfo);
+  return 0;
 }

@@ -66,6 +66,7 @@ RawData::RawData(const std::string &correctionFile)
   laserOffset[26] = 0.93f * 20.0f + 1.6f * 18.0f;
   laserOffset[19] = 0.93f * 20.0f + 1.6f * 19.0f;
   laserOffset[6] = 0.93f * 20.0f + 1.6f * 20.0f;
+  setup();
 }
 
 int RawData::setup()
@@ -288,7 +289,7 @@ int RawData::unpack(
       {
         if (gps1 > gps2.gps)
         {
-          printf("Oops , You give me a wrong timestamp I think...");
+          printf("Oops , You give me a wrong timestamp I think...\n");
         }
         gps1 = gps2.gps;
         gps2.used = 1;
@@ -305,11 +306,10 @@ int RawData::unpack(
             // We need to add the offset.
 
             gps1 += ((lastTimestamp - 20) / 1000000) + 1; // 20us offset , avoid the timestamp of 1000002...
-            printf("There is a round , But gps packet!!! , Change gps1 by manual!!! %d %d %d ", gps1, lastTimestamp, bufferPacket[k].timestamp);
+            printf("There is a round , But gps packet!!! , Change gps1 by manual!!! %d %d %d\n", gps1, lastTimestamp, bufferPacket[k].timestamp);
           }
         }
       }
-      int timestamp = bufferPacket[k].timestamp;
       for (; j < BLOCKS_PER_PACKET; ++j)
       {
         /* code */
