@@ -8,7 +8,8 @@ find_package(PCL REQUIRED )
 
 
 set (CMAKE_CXX_STANDARD 11)
-set (CMAKE_CXX_FLAGS "-g")
+set (CMAKE_CXX_FLAGS "-g -fPIC")
+set (CMAKE_C_FLAGS "-g -fPIC")
 
 
 include_directories(
@@ -25,7 +26,7 @@ add_subdirectory(src/lib)
 
 #add_subdirectory(test)
 
-add_library( ${PROJECT_NAME}
+add_library( ${PROJECT_NAME} SHARED
 	src/pandoraSDK.cc
 )
 

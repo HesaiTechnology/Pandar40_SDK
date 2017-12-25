@@ -67,6 +67,11 @@ void PandoraSDK_internal::init(
 	pthread_mutex_init(&lidarGpsLock, NULL);
 	pthread_mutex_init(&cameraGpsLock, NULL);
 
+	lidarRecvThread = 0;
+	lidarProcessThread = 0;
+	processPicThread = 0;
+	readPacpThread = 0;
+
 	input.reset(new pandar_pointcloud::Input(lidarRecvPort, gpsRecvPort));
 	data_.reset(new pandar_rawdata::RawData(lidarCorrectionFile));
 
@@ -168,6 +173,7 @@ bool PandoraSDK_internal::loadIntrinsics(const std::string &intrinsicFile)
 
 int PandoraSDK_internal::start()
 {	
+	stop();
 	switch(useMode)
 	{
 		case PandoraUseMode_readPcap:
@@ -199,24 +205,24 @@ int PandoraSDK_internal::start()
 void PandoraSDK_internal::setupReadPcap()
 {
 	continueReadPcap = true;
-	readPacpThread = boost::thread(boost::bind(&PandoraSDK_internal::readPcapFile, this));
+	readPacpThread = new boost::thread(boost::bind(&PandoraSDK_internal::readPcapFile, this));
 	continueProcessLidarPacket = true;
-	lidarProcessThread = boost::thread(boost::bind(&PandoraSDK_internal::processLiarPacket, this));
+	lidarProcessThread = new boost::thread(boost::bind(&PandoraSDK_internal::processLiarPacket, this));
 }
 
 void PandoraSDK_internal::setupCameraClient()
 {
 	continueProcessPic = true;
 	pandoraCameraClient = PandoraClientNew(ip.c_str(), cport, cameraClientCallback, this);
-	processPicThread = boost::thread(boost::bind(&PandoraSDK_internal::processPic, this));
+	processPicThread = new boost::thread(boost::bind(&PandoraSDK_internal::processPic, this));
 }
 
 void PandoraSDK_internal::setupLidarClient()
 {
 	continueLidarRecvThread = true;
 	continueProcessLidarPacket = true;
-	lidarProcessThread = boost::thread(boost::bind(&PandoraSDK_internal::processLiarPacket, this));
-	lidarRecvThread = boost::thread(boost::bind(&PandoraSDK_internal::lidarRecvTask, this));
+	lidarProcessThread = new boost::thread(boost::bind(&PandoraSDK_internal::processLiarPacket, this));
+	lidarRecvThread = new boost::thread(boost::bind(&PandoraSDK_internal::lidarRecvTask, this));
 }
 
 
@@ -252,7 +258,11 @@ void PandoraSDK_internal::stop()
 		case PandoraUseMode_readPcap:
 		{
 			continueReadPcap = false;
-			readPacpThread.join();
+			if(readPacpThread)
+			{
+				readPacpThread->join();
+				readPacpThread = 0;
+			}
 			break;
 		}
 
@@ -260,22 +270,50 @@ void PandoraSDK_internal::stop()
 		{
 			continueLidarRecvThread = false;
 			continueProcessLidarPacket = false;
-			lidarProcessThread.join();
-			lidarRecvThread.join();
+			if(lidarProcessThread)
+			{
+				lidarProcessThread->join();
+				delete lidarProcessThread;
+				lidarProcessThread = 0;
+			}
+			if(lidarRecvThread)
+			{
+				lidarRecvThread->join();
+				delete lidarRecvThread;
+				lidarRecvThread = 0;
+			}
 			break;
 		}
 		case PandoraUseMode_lidarAndCamera:
 		{
 			continueLidarRecvThread = false;
 			continueProcessLidarPacket = false;
-			lidarProcessThread.join();
-			lidarRecvThread.join();
+			if(lidarProcessThread)
+			{
+				lidarProcessThread->join();
+				delete lidarProcessThread;
+				lidarProcessThread = 0;
+			}
+			if(lidarRecvThread)
+			{
+				lidarRecvThread->join();
+				delete lidarRecvThread;
+				lidarRecvThread = 0;
+			}
 
 			if (pandoraCameraClient)
+			{
 				PandoraCLientDestroy(pandoraCameraClient);
+				pandoraCameraClient = NULL;
+			}
 			
 			continueProcessPic = false;
-			processPicThread.join();
+			if(processPicThread)
+			{
+				processPicThread->join();
+				delete processPicThread;
+				processPicThread = 0;
+			}
 			break;
 		}
 		default:
@@ -497,6 +535,7 @@ void PandoraSDK_internal::processGps(HS_LIDAR_L40_GPS_Packet &gpsMsg)
 		gps2.gps = lidarLastGPSSecond;
 		gps2.used = 0;
 		pthread_mutex_unlock(&lidarGpsLock);
+		
 		pthread_mutex_lock(&cameraGpsLock);
 		for (int i = 0; i < PandoraSDK_CAMERA_NUM; ++i)
 		{

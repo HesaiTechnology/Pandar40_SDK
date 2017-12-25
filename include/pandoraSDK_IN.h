@@ -112,10 +112,10 @@ private:
 	PandoraUseMode useMode;
 	pthread_mutex_t lidarLock, picLock, lidarGpsLock, cameraGpsLock;
   sem_t lidarSem, picSem;
-	boost::thread lidarRecvThread;
-	boost::thread lidarProcessThread;
-	boost::thread processPicThread;
-	boost::thread readPacpThread;
+	boost::thread* lidarRecvThread;
+	boost::thread* lidarProcessThread;
+	boost::thread* processPicThread;
+	boost::thread* readPacpThread;
 	bool continueLidarRecvThread;
 	bool continueProcessLidarPacket;
 	bool continueProcessPic;

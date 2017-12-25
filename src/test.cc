@@ -41,7 +41,7 @@ void gpsCallback(int timestamp)
   struct timeval ts;
   gettimeofday(&ts, NULL);
   pandoraToSysTimeGap = ts.tv_sec + (double)ts.tv_usec / 1000000 - timestamp;
-  printf("gap: %f\n", pandoraToSysTimeGap);
+  // printf("gap: %f\n", pandoraToSysTimeGap);
 }
 
 void cameraCallbackForDelay(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)
@@ -56,13 +56,13 @@ void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp)
 {
   // fprintf(lidarTimestampFile, "%f\n", timestamp);
   // // fflush(lidarTimestampFile);
-  if (++lidarNo == 100)
-  {
-    char pcdFileName[256];
-    sprintf(pcdFileName, "%d.pcd", ++lidarNoForSave);
-    pcl::io::savePCDFileASCII(pcdFileName, *cld);
-    lidarNo = 0;
-  }
+  // if (++lidarNo == 100)
+  // {
+  //   char pcdFileName[256];
+  //   sprintf(pcdFileName, "%d.pcd", ++lidarNoForSave);
+  //   pcl::io::savePCDFileASCII(pcdFileName, *cld);
+  //   lidarNo = 0;
+  // }
 
   // std::cout<<"lidar: "<<timestamp<<std::endl;
 }
@@ -76,17 +76,17 @@ int main(int argc, char **argv)
   // PandoraSDK psdk(std::string("172.31.2.165"), 9870, cameraCallbackForDelay, lidarCallback);
   // PandoraSDK psdk(std::string("/media/yy/Data/pcap/alibaba/lane_line.pcap"), std::string(""), 0, lidarCallback);
   psdk.start();
-  while(true)
-  {
-    sleep(100);
-  }
   // while(true)
   // {
-  //   sleep(5);
-  //   printf("stop\n");
-  //   psdk.stop();
-  //   sleep(5);
-  //   printf("start\n");
-  //   psdk.start();
+  //   sleep(100);
   // }
+  while(true)
+  {
+    sleep(5);
+    printf("stop\n");
+    psdk.stop();
+    sleep(5);
+    printf("start\n");
+    psdk.start();
+  }
 }

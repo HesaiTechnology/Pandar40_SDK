@@ -38,6 +38,8 @@ public:
 		const double startAngle,
 		boost::function<void(boost::shared_ptr<PPointCloud> pcloudp, double timestamp)> lidarCallback);
 
+	PandoraSDK(){};
+
 	~PandoraSDK();
 	int start();
 	void stop();
