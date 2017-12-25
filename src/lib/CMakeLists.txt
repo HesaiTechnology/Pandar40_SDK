@@ -6,6 +6,10 @@ target_link_libraries(
   ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES}
 )
 
+set_target_properties(pandar_rawdata PROPERTIES
+	COMPILE_FLAGS -std=c++11)
+
+
 add_library(pandar_input input.cc)
 target_link_libraries(pandar_input
 	pcap
@@ -29,6 +33,5 @@ target_link_libraries(pandora_sdk_in
 	${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES}
 )
 
-#set_target_properties(pandar_rawdata PROPERTIES
-#	COMPILE_FLAGS -std=c++11)
+
 

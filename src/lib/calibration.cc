@@ -2,6 +2,7 @@
 #include <fstream>
 #include <limits>
 #include <boost/filesystem.hpp>
+#include <cmath>
 #include "calibration.h"
 
 namespace angles

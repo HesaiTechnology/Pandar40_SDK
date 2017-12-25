@@ -56,6 +56,15 @@ void PandoraSDK_internal::init(
 	userGpsCallback = gpsCallback;
 	lidarRotationStartAngle = static_cast<int>(startAngle * 100);
 
+	gps1 = 0;
+	gps2.gps = 0;
+	for(int i = 0; i < PandoraSDK_CAMERA_NUM; ++i)
+	{
+		gps1Cam[i] = 0;
+		gps2Cam[i].gps = 0;
+		cameraTimestamp[i] = 0;
+	}
+
 	if (ip.empty())
 		useMode = PandoraUseMode_onlyLidar;
 	else
@@ -375,8 +384,8 @@ void PandoraSDK_internal::processPic()
 			if(pic->header.timestamp < cameraTimestamp[pic->header.pic_id])
 			{
 				gps1Cam[pic->header.pic_id] += ((cameraTimestamp[pic->header.pic_id] - 100) /1000000) +  1;
-				if (pic->header.pic_id == 0)
-					std::cout<<"there is a round: "<<pic->header.timestamp<<", "<<cameraTimestamp[pic->header.pic_id]<<", "<<gps1Cam[pic->header.pic_id]<<std::endl;
+				printf("there is a round, current: %d, last: %d\n", pic->header.timestamp, cameraTimestamp[pic->header.pic_id]);
+				// std::cout<<"there is a round: "<<pic->header.timestamp<<", "<<cameraTimestamp[pic->header.pic_id]<<", "<<gps1Cam[pic->header.pic_id]<<std::endl;
 			}
 		}
 
