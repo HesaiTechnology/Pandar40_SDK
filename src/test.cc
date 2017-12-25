@@ -14,16 +14,16 @@ void cameraCallback(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_i
   // Mat myMat = imread("t.png");
   // imshow("camera", myMat);
   // std::cout<<myMat<<std::endl;
-  if(++imageNo > 50  && modnum < 4)
-  { 
-    ++modnum;
-    cv::imwrite(boost::to_string(++imageNoForSave) + "-" + boost::to_string(pic_id) + ".jpg", *matp);
-    if (modnum == 4)
-    {
-      imageNo = 0;
-      modnum = 0;
-    }
-  }
+  // if(++imageNo > 50  && modnum < 4)
+  // { 
+  //   ++modnum;
+  //   cv::imwrite(boost::to_string(++imageNoForSave) + "-" + boost::to_string(pic_id) + ".jpg", *matp);
+  //   if (modnum == 4)
+  //   {
+  //     imageNo = 0;
+  //     modnum = 0;
+  //   }
+  // }
   struct timeval ts;
   gettimeofday(&ts, NULL);
   fprintf(cameraTimestampFile, "%d,%f\n", pic_id, ts.tv_sec + (double)ts.tv_usec / 1000000  -  pandoraToSysTimeGap - timestamp);
@@ -76,17 +76,17 @@ int main(int argc, char **argv)
   // PandoraSDK psdk(std::string("172.31.2.165"), 9870, cameraCallbackForDelay, lidarCallback);
   // PandoraSDK psdk(std::string("/media/yy/Data/pcap/alibaba/lane_line.pcap"), std::string(""), 0, lidarCallback);
   psdk.start();
-  // while(true)
-  // {
-  //   sleep(100);
-  // }
   while(true)
   {
-    sleep(5);
-    printf("stop\n");
-    psdk.stop();
-    sleep(5);
-    printf("start\n");
-    psdk.start();
+    sleep(100);
   }
+  // while(true)
+  // {
+  //   sleep(5);
+  //   printf("stop\n");
+  //   psdk.stop();
+  //   sleep(5);
+  //   printf("start\n");
+  //   psdk.start();
+  // }
 }

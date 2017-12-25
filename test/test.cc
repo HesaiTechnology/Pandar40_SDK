@@ -1,42 +1,58 @@
 #include "pandoraSDK.h"
 
-#include <opencv2/highgui/highgui.hpp>
+int imageNo = 0;
+unsigned long imageNoForSave = 0;
+unsigned int modnum = 0;
+int lidarNo = 0;
+unsigned long lidarNoForSave = 0;
+double pandoraToSysTimeGap = 0;
 
-class PandoraCallback
+void cameraCallback(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)
 {
-public:
-  PandoraCallback()
-  {
+
+  if(++imageNo > 50  && modnum < 4)
+  { 
+    ++modnum;
+    cv::imwrite(boost::to_string(++imageNoForSave) + "-" + boost::to_string(pic_id) + ".jpg", *matp);
+    if (modnum == 4)
+    {
+      imageNo = 0;
+      modnum = 0;
+    }
   }
-
-  void cameraCallback(cv::Mat mat, double timestamp, int pic_id)
-  {
-  }
-
-  void lidarCallback(pcl::PointCloud<PPoint>::Ptr cld, double timestamp)
-  {
-  }
-private:
-};
-
-
-
-
-void cameraCallback(cv::Mat mat, double timestamp, int pic_id)
-{
 
 }
 
-void lidarCallback(pcl::PointCloud<PPoint>::Ptr cld, double timestamp)
+void gpsCallback(int timestamp)
 {
+  struct timeval ts;
+  gettimeofday(&ts, NULL);
+  pandoraToSysTimeGap = ts.tv_sec + (double)ts.tv_usec / 1000000 - timestamp;
+  // printf("gap: %f\n", pandoraToSysTimeGap);
 }
 
+void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp)
+{
+
+  if (++lidarNo == 100)
+  {
+    char pcdFileName[256];
+    sprintf(pcdFileName, "%d.pcd", ++lidarNoForSave);
+    pcl::io::savePCDFileASCII(pcdFileName, *cld);
+    lidarNo = 0;
+  }
+
+}
 
 int main(int argc, char **argv)
 {
-  // PandoraCallback pback;
-  boost::function<void(cv::Mat, double timestamp, int pic_id)> cb = &cameraCallback;
-  boost::function<void(pcl::PointCloud<PPoint>::Ptr cld, double timestamp)> lb = &lidarCallback;
-  PandoraSDK psdk(std::string("172.31.3.165"), 9870, 8080, 0, std::string("intrinsic.ymal"), std::string("extrinsic.ymal"), std::string("correction.csv"), cb, lb);
+
+  // PandoraSDK psdk(std::string("172.31.2.165"), 9870, 8080, 10110, 0, std::string(""), std::string(""), cameraCallback, lidarCallback, gpsCallback);
+  PandoraSDK psdk(std::string("172.31.2.165"), 9870, cameraCallback, lidarCallback); //use default udpport, gpsport, intrinsic, start_angle, correction
   psdk.start();
+  while(true)
+  {
+    sleep(100);
+  }
+
 }

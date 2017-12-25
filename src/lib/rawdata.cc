@@ -289,7 +289,7 @@ int RawData::unpack(
       {
         if (gps1 > gps2.gps)
         {
-          printf("Oops , You give me a wrong timestamp I think... ,%d , %d\n" , gps1 , gps2.gps);
+          printf("Oops , You give me a wrong gps timestamp I think... ,%d , %d\n" , gps1 , gps2.gps);
         }
         gps1 = gps2.gps;
         gps2.used = 1;
