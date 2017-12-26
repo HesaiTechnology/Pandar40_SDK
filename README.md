@@ -20,35 +20,4 @@ make
 ```
 
 # Usage
-### sample:
-```
-#include "pandoraSDK.h"
-
-void cameraCallback(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)
-{
-    // do something with matp
-    // cv::imwrite("test.jpg", *matp);
-}
-
-void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp)
-{
-    // do something with cld
-    // pcl::io::savePCDFileASCII("test.pcd", *cld);
-}
-
-
-
-int main(int argc, char **argv)
-{
-    PandoraSDK psdk(std::string("172.31.2.165"), 9870, 8080, 0, std::string("intrinsic.yaml"), std::string("correction.csv"), cameraCallback, lidarCallback);
-    // PandoraSDK psdk(std::string("172.31.2.165"), 9870, cameraCallback, lidarCallback); // use default port, intrinsic, correction
-    psdk.start(); // start task
-    sleep(5);
-    psdk.stop();  //  stop task
-    sleep(5);
-    psdk.start(); // start task again
-    while(true)
-    {
-        sleep(100);
-    }
-```
+参照test文件夹
