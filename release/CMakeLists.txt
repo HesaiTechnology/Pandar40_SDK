@@ -10,7 +10,7 @@ set (CMAKE_CXX_STANDARD 11)
 
 
 include_directories(
-	include
+	pandoraSDK
 	${Boost_INCLUDE_DIRS}
 	${PCL_INCLUDE_DIRS}
 )
@@ -38,7 +38,7 @@ endif()
 message("${CMAKE_SOURCE_DIR}/lib/${pandoraSDK}")
 
 target_link_libraries(${PROJECT_NAME} 
-  ${CMAKE_SOURCE_DIR}/lib/${pandoraSDK}
+  ${CMAKE_SOURCE_DIR}/pandoraSDK/lib/${pandoraSDK}
 	${OpenCV_LIBS}
 	${Boost_LIBRARIES}
 	${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES}
