@@ -97,7 +97,7 @@ private:
 			const std::string lidarCorrectionFile,
 			boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
 			boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
-			boost::function<void(double timestamp)> gpsCallback);
+			boost::function<void(unsigned int timestamp)> gpsCallback);
 	void setupCameraClient();
 	void setupLidarClient();
 	void setupReadPcap();

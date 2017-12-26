@@ -72,8 +72,8 @@ int main(int argc, char **argv)
   // PandoraSDK psdk(std::string("172.31.2.165"), 9870, 8080, 10110, 0,
   // std::string("intrinsic.yaml"), std::string("correction.csv"), 
   // cameraCallback, lidarCallback, gpsCallback);
-  PandoraSDK psdk(std::string("172.31.2.165"), 9870, 8080, 10110, 0, std::string(""), std::string(""), cameraCallback, lidarCallback, gpsCallback);
-  // PandoraSDK psdk(std::string("172.31.2.165"), 9870, cameraCallbackForDelay, lidarCallback);
+  PandoraSDK psdk(std::string("192.168.20.51"), 9870, 8080, 10110, 0, std::string(""), std::string(""), cameraCallback, lidarCallback, gpsCallback);
+  // PandoraSDK psdk(std::string("192.168.20.51"), 9870, cameraCallbackForDelay, lidarCallback);
   // PandoraSDK psdk(std::string("/media/yy/Data/pcap/alibaba/lane_line.pcap"), std::string(""), 0, lidarCallback);
   psdk.start();
   while(true)

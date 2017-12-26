@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(pandoarSDK_sample)
+project(pandora_sample)
 
 find_package( OpenCV REQUIRED )
 find_package( Boost REQUIRED )
@@ -17,7 +17,7 @@ include_directories(
 
 
 add_executable(${PROJECT_NAME} 
-	test.cc
+	sample.cc
 )
 
 

@@ -23,12 +23,12 @@ void cameraCallback(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_i
 
 }
 
-void gpsCallback(int timestamp)
+void gpsCallback(unsigned int timestamp)
 {
   struct timeval ts;
   gettimeofday(&ts, NULL);
   pandoraToSysTimeGap = ts.tv_sec + (double)ts.tv_usec / 1000000 - timestamp;
-  // printf("gap: %f\n", pandoraToSysTimeGap);
+  printf("gap: %f\n", pandoraToSysTimeGap);
 }
 
 void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp)
@@ -47,8 +47,8 @@ void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp)
 int main(int argc, char **argv)
 {
 
-  // PandoraSDK psdk(std::string("172.31.2.165"), 9870, 8080, 10110, 0, std::string(""), std::string(""), cameraCallback, lidarCallback, gpsCallback);
-  PandoraSDK psdk(std::string("172.31.2.165"), 9870, cameraCallback, lidarCallback); //use default udpport, gpsport, intrinsic, start_angle, correction
+  PandoraSDK psdk(std::string("192.168.20.51"), 9870, 8080, 10110, 0, std::string(""), std::string(""), cameraCallback, lidarCallback, gpsCallback);
+  // PandoraSDK psdk(std::string("192.168.20.51"), 9870, cameraCallback, lidarCallback); //use default udpport, gpsport, intrinsic, start_angle, correction
   psdk.start();
   while(true)
   {

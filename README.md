@@ -1,5 +1,4 @@
 # Build
-**only supports Ubuntu14 platform**
 ### 1. [install opencv](https://docs.opencv.org/3.1.0/d7/d9f/tutorial_linux_install.html)
 
 ### 2. install dependencies:
