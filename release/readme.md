@@ -55,4 +55,4 @@ sudo apt-get install libpcl-all
 ```
 
 ## 4. Sample Code:
-### 请参照sample目录
+### 请参照sample文件
