@@ -17,7 +17,7 @@ pandoraSDK
 
 ### (2). install dependencies:
 ```
-sudo apt-get install libboost-all-dev libyaml-cpp-dev
+sudo apt-get install libboost-all-dev libyaml-cpp-dev libjpeg-dev
 ```
 ### (3). install pcl:
 ```
