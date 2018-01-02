@@ -80,7 +80,7 @@ int RawData::setup()
 
   for (uint16_t rotIndex = 0; rotIndex < ROTATION_MAX_UNITS; ++rotIndex)
   {
-    float rotation = angles::from_degrees(ROTATION_RESOLUTION * rotIndex);
+    float rotation = angles::degreeToRadian(ROTATION_RESOLUTION * rotIndex);
     cos_lookup_table_[rotIndex] = cosf(rotation);
     sin_lookup_table_[rotIndex] = sinf(rotation);
   }
@@ -158,7 +158,7 @@ void RawData::computeXYZIR(
   }
   else
   {
-    double azimuthInRadians = angles::from_degrees((static_cast<double>(azimuth) / 100.0) + correction.azimuthCorrection);
+    double azimuthInRadians = angles::degreeToRadian((static_cast<double>(azimuth) / 100.0) + correction.azimuthCorrection);
     cos_azimuth = std::cos(azimuthInRadians);
     sin_azimuth = std::sin(azimuthInRadians);
   }

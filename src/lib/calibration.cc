@@ -7,9 +7,9 @@
 
 namespace angles
 {
-double from_degrees(double degrees)
+double degreeToRadian(double degree)
 {
-    return degrees * M_PI / 180;
+    return degree * M_PI / 180;
 }
 }
 
@@ -79,10 +79,10 @@ void Calibration::read(const std::string &calibrationFile)
         std::cout << "parsing correction file." << std::endl;
     }
 
-    int line_cnt = 0;
+    int lineCounter = 0;
     while (std::getline(ifs, line))
     {
-        if (line_cnt++ >= 40)
+        if (lineCounter++ >= 40)
             break;
 
         int lineId = 0;
@@ -102,8 +102,8 @@ void Calibration::read(const std::string &calibrationFile)
         laserCorrections[lineId].horizontalOffsetCorrection = 0.0;
         laserCorrections[lineId].verticalOffsetCorrection = 0.0;
         laserCorrections[lineId].verticalCorrection = elev;
-        laserCorrections[lineId].sinVertCorrection = std::sin(angles::from_degrees(elev));
-        laserCorrections[lineId].cosVertCorrection = std::cos(angles::from_degrees(elev));
+        laserCorrections[lineId].sinVertCorrection = std::sin(angles::degreeToRadian(elev));
+        laserCorrections[lineId].cosVertCorrection = std::cos(angles::degreeToRadian(elev));
     }
 }
 

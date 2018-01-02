@@ -80,6 +80,7 @@ void PandoraSDK_internal::init(
 	lidarProcessThread = 0;
 	processPicThread = 0;
 	readPacpThread = 0;
+	pandoraCameraClient = NULL;
 
 	input.reset(new pandar_pointcloud::Input(lidarRecvPort, gpsRecvPort));
 	data_.reset(new pandar_rawdata::RawData(lidarCorrectionFile));
@@ -166,7 +167,7 @@ bool PandoraSDK_internal::loadIntrinsics(const std::string &intrinsicFile)
 {
 	std::vector<cv::Mat> cameraKList;
 	std::vector<cv::Mat> cameraDList;
-	if (!load_camera_intrinsics(intrinsicFile.c_str(), cameraKList, cameraDList))
+	if (!loadCameraIntrinsics(intrinsicFile.c_str(), cameraKList, cameraDList))
 		return false;
 	for (int i = 0; i < PandoraSDK_CAMERA_NUM; i++)
 	{
@@ -263,84 +264,48 @@ void PandoraSDK_internal::readPcapFile()
 
 void PandoraSDK_internal::stop()
 {
-	switch(useMode)
+	continueLidarRecvThread = false;
+	continueProcessLidarPacket = false;
+	continueProcessPic = false;
+	continueReadPcap = false;
+
+	if(lidarProcessThread)
 	{
-		case PandoraUseMode_readPcap:
-		{
-			continueReadPcap = false;
-			if(readPacpThread)
-			{
-				readPacpThread->join();
-				readPacpThread = 0;
-			}
-			break;
-		}
-
-		case PandoraUseMode_onlyLidar:
-		{
-			continueLidarRecvThread = false;
-			continueProcessLidarPacket = false;
-			if(lidarProcessThread)
-			{
-				lidarProcessThread->join();
-				delete lidarProcessThread;
-				lidarProcessThread = 0;
-			}
-			if(lidarRecvThread)
-			{
-				lidarRecvThread->join();
-				delete lidarRecvThread;
-				lidarRecvThread = 0;
-			}
-			break;
-		}
-		case PandoraUseMode_lidarAndCamera:
-		{
-			continueLidarRecvThread = false;
-			continueProcessLidarPacket = false;
-			if(lidarProcessThread)
-			{
-				lidarProcessThread->join();
-				delete lidarProcessThread;
-				lidarProcessThread = 0;
-			}
-			if(lidarRecvThread)
-			{
-				lidarRecvThread->join();
-				delete lidarRecvThread;
-				lidarRecvThread = 0;
-			}
-
-			if (pandoraCameraClient)
-			{
-				PandoraCLientDestroy(pandoraCameraClient);
-				pandoraCameraClient = NULL;
-			}
-			
-			continueProcessPic = false;
-			if(processPicThread)
-			{
-				processPicThread->join();
-				delete processPicThread;
-				processPicThread = 0;
-			}
-			break;
-		}
-		default:
-		{
-			printf("wrong useMode in stop\n");
-		}
+		lidarProcessThread->join();
+		delete lidarProcessThread;
+		lidarProcessThread = 0;
 	}
-
+	if(lidarRecvThread)
+	{
+		lidarRecvThread->join();
+		delete lidarRecvThread;
+		lidarRecvThread = 0;
+	}
+	if (pandoraCameraClient)
+	{
+		PandoraClientDestroy(pandoraCameraClient);
+		pandoraCameraClient = NULL;
+	}
+	if(processPicThread)
+	{
+		processPicThread->join();
+		delete processPicThread;
+		processPicThread = 0;
+	}
+	if(readPacpThread)
+	{
+		readPacpThread->join();
+		readPacpThread = 0;
+	}
 
 }
 
 void PandoraSDK_internal::pushPicture(PandoraPic *pic)
 {
 	pthread_mutex_lock(&picLock);
-  	pictureList.push_back(pic);
-  	pthread_mutex_unlock(&picLock);
-  	sem_post(&picSem);
+  pictureList.push_back(pic);
+  pthread_mutex_unlock(&picLock);
+  sem_post(&picSem);
 }
 
 void PandoraSDK_internal::processPic()
@@ -375,10 +340,6 @@ void PandoraSDK_internal::processPic()
 		{
 			gps1Cam[pic->header.pic_id] = gps2Cam[pic->header.pic_id].gps;
 			gps2Cam[pic->header.pic_id].used =1;
-			// if (pic->header.pic_id == 0)
-			// {
-			// 	std::cout<<"new gps: "<<gps2Cam[pic->header.pic_id].gps<<std::endl;
-			// }
 		}
 		else
 		{
@@ -386,22 +347,20 @@ void PandoraSDK_internal::processPic()
 			{
 				gps1Cam[pic->header.pic_id] += ((cameraTimestamp[pic->header.pic_id] - 100) /1000000) +  1;
 				printf("there is a round, current: %d, last: %d\n", pic->header.timestamp, cameraTimestamp[pic->header.pic_id]);
-				// std::cout<<"there is a round: "<<pic->header.timestamp<<", "<<cameraTimestamp[pic->header.pic_id]<<", "<<gps1Cam[pic->header.pic_id]<<std::endl;
 			}
 		}
 
 		cameraTimestamp[pic->header.pic_id] = pic->header.timestamp;
-
 		double timestamp = (double)gps1Cam[pic->header.pic_id] + ((double)pic->header.timestamp)/1000000;
-
 		pthread_mutex_unlock(&cameraGpsLock);
+
 		boost::shared_ptr<cv::Mat> cvMatPic(new cv::Mat());
 		switch (pic->header.pic_id)
 		{
 			case 0:
 			{
-				conv_yuv422_to_mat(*cvMatPic, pic->yuv, pic->header.width, pic->header.height, 8);
-				if (needRemapPicMat)
+				yuv422ToCvmat(*cvMatPic, pic->yuv, pic->header.width, pic->header.height, 8);
+				if(needRemapPicMat)
 					remap(cvMatPic->clone(), *cvMatPic, mapxList[pic->header.pic_id], mapyList[pic->header.pic_id], INTER_LINEAR);
 				break;
 			}
@@ -422,8 +381,8 @@ void PandoraSDK_internal::processPic()
 				// gettimeofday(&ts_s, NULL);
 				decompressJpeg((unsigned char*)pic->yuv, pic->header.len, bmp, bmpSize);
 
-				*cvMatPic = cv::Mat(720, 1280, CV_8UC3, bmp).clone();
-				if (needRemapPicMat)
+				*cvMatPic = cv::Mat(PandoraSDK_IMAGE_HEIGHT, PandoraSDK_IMAGE_WIDTH, CV_8UC3, bmp).clone();
+				if(needRemapPicMat)
 					remap(cvMatPic->clone(), *cvMatPic, mapxList[pic->header.pic_id], mapyList[pic->header.pic_id], INTER_LINEAR);
 
 				// gettimeofday(&ts_e, NULL);
@@ -453,10 +412,9 @@ void PandoraSDK_internal::lidarRecvTask()
 	while (continueLidarRecvThread)
 	{
 		PandarPacket pkt;
-		int rc = input->getPacket(&pkt, 0); // todo
+		int rc = input->getPacket(&pkt, 0);
 		if (rc == -1)
 		{
-			printf("something wrong with input.getPacket\n");
 			continue;
 		}
 		if (rc == 1)
@@ -466,7 +424,6 @@ void PandoraSDK_internal::lidarRecvTask()
 			processGps(hesaiGps);
 			continue;
 		}
-		// data packet
 		pushLiDARData(pkt);
 	}
 }
@@ -488,7 +445,6 @@ void PandoraSDK_internal::processLiarPacket()
 		ts.tv_sec += 1;
 		if (sem_timedwait(&lidarSem, &ts) == -1)
 		{
-			std::cout << "no lidarPacket" << std::endl;
 			continue;
 		}
 		pthread_mutex_lock(&lidarLock);
@@ -557,15 +513,4 @@ void PandoraSDK_internal::processGps(HS_LIDAR_L40_GPS_Packet &gpsMsg)
 	if (userGpsCallback)
 		userGpsCallback(lidarLastGPSSecond);
 
-	// if (cameraLastGPSSecond != (mktime(&t) + 1))
-	// {
-
-	// 	cameraLastGPSSecond = mktime(&t) + 1;
-	// 	for (int i = 0; i < PandoraSDK_CAMERA_NUM; ++i)
-	// 	{
-	// 		/* code */
-	// 		gps2Cam[i].gps = cameraLastGPSSecond;
-	// 		gps2Cam[i].used = 0;
-	// 	}
-	// }
 }

@@ -11,7 +11,7 @@
 
 namespace angles
 {
-  double from_degrees(double degrees);
+  double degreeToRadian(double degrees);
 }
 
 namespace pandar_pointcloud {
@@ -32,12 +32,6 @@ struct PandarLaserCorrection
 class Calibration {
 
 public:
-	static const int laserNumber = 40;
-	PandarLaserCorrection laserCorrections[laserNumber];
-    bool initialized;
-
-public:
-
     Calibration(): initialized(false)
 	{}
     Calibration(const std::string& calibrationFile)
@@ -46,6 +40,9 @@ public:
     }
 
     void read(const std::string& calibrationFile);
+    static const int laserNumber = 40;
+	PandarLaserCorrection laserCorrections[laserNumber];
+    bool initialized;
 
 private:
     void setDefaultCorrections ();
