@@ -54,7 +54,7 @@ PandoraSDK::PandoraSDK(
 
 PandoraSDK::~PandoraSDK()
 {
-
+	delete psi;
 }
 
 int PandoraSDK::start()
