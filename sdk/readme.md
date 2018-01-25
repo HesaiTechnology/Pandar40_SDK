@@ -13,17 +13,10 @@ pandoraSDK
 ```
 使用时,需要include `pandoraSDK.h`和`point_types.h`这两个头文件,构建项目时, 根据不同的ubuntu版本链接不同的 libpandoraSDK.so
 ## 2. 依赖环境:
-### (1). [install opencv](https://docs.opencv.org/3.1.0/d7/d9f/tutorial_linux_install.html)
 
-### (2). install dependencies:
+### install dependencies:
 ```
-sudo apt-get install libboost-all-dev libyaml-cpp-dev libjpeg-dev
-```
-### (3). install pcl:
-```
-sudo add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl
-sudo apt-get update
-sudo apt-get install libpcl-all
+sudo apt-get install libcv-dev libpcap-dev libpcl-dev libboost-all-dev libyaml-cpp-dev libjpeg-dev
 ```
 
 ## 3. 接口说明:
