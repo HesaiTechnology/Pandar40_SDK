@@ -35,15 +35,15 @@ typedef struct HS_LIDAR_L40_GPS_PACKET_s{
 #define HS_LIDAR_L40_GPS_PACKET_SECOND_SIZE (2)
 #define HS_LIDAR_L40_GPS_ITEM_NUM (7)
 
-#define PandoraSDK_DEFAULT_LIDAR_RECV_PORT 8080
-#define PandoraSDK_DEFAULT_GPS_RECV_PORT 10110
+#define HesaiLidarSDK_DEFAULT_LIDAR_RECV_PORT 8080
+#define HesaiLidarSDK_DEFAULT_GPS_RECV_PORT 10110
 
-#define PandoraSDK_DEFAULT_START_ANGLE 0.0
-#define PandoraSDK_CAMERA_NUM  5
-#define PandoraSDK_IMAGE_WIDTH 1280
-#define PandoraSDK_IMAGE_HEIGHT 720
+#define HesaiLidarSDK_DEFAULT_START_ANGLE 0.0
+#define HesaiLidarSDK_CAMERA_NUM  5
+#define HesaiLidarSDK_IMAGE_WIDTH 1280
+#define HesaiLidarSDK_IMAGE_HEIGHT 720
 // 10000 us  = 100 ms = 0.1s per packet
-#define PandoraSDK_PCAP_TIME_INTERVAL 100000
+#define HesaiLidarSDK_PCAP_TIME_INTERVAL 100000
 
 
 enum PandoraUseMode
@@ -54,10 +54,10 @@ enum PandoraUseMode
 };
 
 
-class PandoraSDK_internal
+class HesaiLidarSDK_internal
 {
 public:
-	PandoraSDK_internal(
+	HesaiLidarSDK_internal(
 		const std::string pandoraIP,
 		const unsigned short pandoraCameraPort,
 		const unsigned short lidarRecvPort,
@@ -67,27 +67,31 @@ public:
 		const std::string lidarCorrectionFile,
 		boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
 		boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
-		boost::function<void(double timestamp)> gpsCallback);
+		boost::function<void(double timestamp)> gpsCallback,
+		const unsigned int laserReturnType,
+		const unsigned int laserCount,
+		const unsigned int pclDataType);
 	
-	PandoraSDK_internal(
+	HesaiLidarSDK_internal(
 		const std::string pandoraIP,
 		const unsigned short pandoraCameraPort,
 		boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
 		boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback);
 	
-	PandoraSDK_internal(
-		const std::string pcapPath,
-		const std::string lidarCorrectionFile,
-		const double startAngle,
-		boost::function<void(boost::shared_ptr<PPointCloud> pcloudp, double timestamp)> lidarCallback);
 
-	~PandoraSDK_internal();
+	// HesaiLidarSDK_internal(
+	// 	const std::string pcapPath,
+	// 	const std::string lidarCorrectionFile,
+	// 	const double startAngle,
+	// 	boost::function<void(boost::shared_ptr<PPointCloud> pcloudp, double timestamp)> lidarCallback);
+
+	~HesaiLidarSDK_internal();
 	int start();
 	void stop();
 	void pushPicture(PandoraPic *pic);
 
 private:
-	void init(	
+	void init(
 			const std::string pandoraIP,
 			const unsigned short pandoraCameraPort,
 			const unsigned short lidarRecvPort,
@@ -97,7 +101,10 @@ private:
 			const std::string lidarCorrectionFile,
 			boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
 			boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
-			boost::function<void(unsigned int timestamp)> gpsCallback);
+			boost::function<void(unsigned int timestamp)> gpsCallback,
+			const unsigned int laserReturnType,
+			const unsigned int laserCount,
+			const unsigned int pclDataType);
 	void setupCameraClient();
 	void setupLidarClient();
 	void setupReadPcap();
@@ -108,6 +115,8 @@ private:
 	void processPic();
 	void pushLiDARData(PandarPacket packet);
 	bool loadIntrinsics(const std::string& intrinsicFile);
+	void internalFuncForGPS(const unsigned int &gpsstamp);
+
 
 	PandoraUseMode useMode;
 	pthread_mutex_t lidarLock, picLock, lidarGpsLock, cameraGpsLock;
@@ -140,11 +149,11 @@ private:
 	boost::shared_ptr<pandar_rawdata::RawData> data_;
 	time_t gps1;
   	GPS_STRUCT_T gps2;
-  	time_t gps1Cam[PandoraSDK_CAMERA_NUM];
-	GPS_STRUCT_T gps2Cam[PandoraSDK_CAMERA_NUM];
+  	time_t gps1Cam[HesaiLidarSDK_CAMERA_NUM];
+	GPS_STRUCT_T gps2Cam[HesaiLidarSDK_CAMERA_NUM];
 	unsigned int lidarLastGPSSecond;
 	unsigned int cameraLastGPSSecond;
-	unsigned int cameraTimestamp[PandoraSDK_CAMERA_NUM];
+	unsigned int cameraTimestamp[HesaiLidarSDK_CAMERA_NUM];
 };
 
 #endif

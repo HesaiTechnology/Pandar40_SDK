@@ -1,7 +1,7 @@
-#include "pandoraSDK.h"
-#include "pandoraSDK_IN.h"
+#include "hesaiLidarSDK.h"
+#include "hesaiLidarSDK_IN.h"
 
-PandoraSDK::PandoraSDK(
+HesaiLidarSDK::HesaiLidarSDK(
 	const std::string pandoraIP,
 	const unsigned short pandoraCameraPort,
 	const unsigned short lidarRecvPort,
@@ -11,9 +11,12 @@ PandoraSDK::PandoraSDK(
 	const std::string lidarCorrectionFile,
 	boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
 	boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
-	boost::function<void(unsigned int timestamp)> gpsCallback)
+	boost::function<void(unsigned int timestamp)> gpsCallback,
+	const unsigned int laserReturnType,
+	const unsigned int laserCount,
+	const unsigned int pclDataType)
 {
-	psi = new PandoraSDK_internal(
+	psi = new HesaiLidarSDK_internal(
 		pandoraIP,
 		pandoraCameraPort,
 		lidarRecvPort,
@@ -23,45 +26,70 @@ PandoraSDK::PandoraSDK(
 		lidarCorrectionFile,
 		cameraCallback,
 		lidarCallback,
-		gpsCallback);
+		gpsCallback,
+		laserReturnType, laserCount, pclDataType);
 }
 
-PandoraSDK::PandoraSDK(
+HesaiLidarSDK::HesaiLidarSDK(
 	const std::string pandoraIP,
 	const unsigned short pandoraCameraPort,
 	boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
 	boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback)
 {
-	psi = new PandoraSDK_internal(
+	psi = new HesaiLidarSDK_internal(
 		pandoraIP,
 		pandoraCameraPort,
 		cameraCallback,
 		lidarCallback);
 }
 
-// PandoraSDK::PandoraSDK(
+HesaiLidarSDK::HesaiLidarSDK(
+	const unsigned short lidarRecvPort,
+	const unsigned short gpsRecvPort,
+	const std::string lidarCorrectionFile,
+	boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
+	boost::function<void(unsigned int timestamp)> gpsCallback,
+	const unsigned int laserReturnType,
+	const unsigned int laserCount,
+	const unsigned int pclDataType)
+{
+	psi = new HesaiLidarSDK_internal(
+		std::string(""),
+		0,
+		lidarRecvPort,
+		gpsRecvPort,
+		0,
+		std::string(""),
+		lidarCorrectionFile,
+		NULL,
+		lidarCallback,
+		gpsCallback,
+		laserReturnType, laserCount, pclDataType);
+}
+
+// HesaiLidarSDK::HesaiLidarSDK(
 // 		const std::string pcapPath,
 // 		const std::string lidarCorrectionFile,
 // 		const double startAngle,
 // 		boost::function<void(boost::shared_ptr<PPointCloud> pcloudp, double timestamp)> lidarCallback)
 // {
-// 	psi = new PandoraSDK_internal(
+// 	psi = new HesaiLidarSDK_internal(
 // 		pcapPath,
 // 		lidarCorrectionFile,
 // 		startAngle,
 // 		lidarCallback);
 // }
 
-PandoraSDK::~PandoraSDK()
+HesaiLidarSDK::~HesaiLidarSDK()
 {
 	delete psi;
 }
 
-int PandoraSDK::start()
+int HesaiLidarSDK::start()
 {
 	psi->start();
 }
-void PandoraSDK::stop()
+void HesaiLidarSDK::stop()
 {
 	psi->stop();
 }

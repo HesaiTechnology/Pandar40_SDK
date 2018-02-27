@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(pandoraSDK)
+project(hesaiLidarSDK)
 
 find_package( OpenCV REQUIRED )
 find_package( Boost REQUIRED )
@@ -26,7 +26,7 @@ add_subdirectory(src/lib)
 #add_subdirectory(test)
 
 add_library( ${PROJECT_NAME} SHARED
-	src/pandoraSDK.cc
+	src/hesaiLidarSDK.cc
 )
 
 target_link_libraries(${PROJECT_NAME}

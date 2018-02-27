@@ -22,7 +22,7 @@ target_link_libraries(pandora_utilities
 	${OpenCV_LIBS}
 )
 
-add_library(pandora_sdk_in pandoraSDK_IN.cc)
+add_library(pandora_sdk_in hesaiLidarSDK_IN.cc)
 target_link_libraries(pandora_sdk_in
 	pandar_input
 	pandar_rawdata

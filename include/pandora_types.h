@@ -13,6 +13,12 @@ typedef struct GPS_STRUCT_{
     time_t gps;
 }GPS_STRUCT_T;
 
+enum DeviceType
+{
+  deviceTypeSingleReturn,
+  deviceTypeDualReturn
+};
+
 #define PANDORA_GPS_PACKET_SIZE 512
 
 #endif
