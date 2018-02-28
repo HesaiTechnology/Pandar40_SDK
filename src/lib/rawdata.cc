@@ -663,7 +663,7 @@ int RawData::unpackSingleReturn(
               // We need to add the offset.
 
               gps1 += ((lastTimestamp - 20) / 1000000) + 1; // 20us offset , avoid the timestamp of 1000002...
-              printf("There is a round , But gps packet!!! , Change gps1 by manual!!! %d %d %d\n", gps1, lastTimestamp, bufferPacket[k].timestamp);
+              // printf("There is a round , But gps packet!!! , Change gps1 by manual!!! %d %d %d\n", gps1, lastTimestamp, bufferPacket[k].timestamp);
             }
           }
         }

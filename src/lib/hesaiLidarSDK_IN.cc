@@ -487,13 +487,13 @@ void HesaiLidarSDK_internal::processLiarPacket()
 		pthread_mutex_unlock(&lidarGpsLock);
 		if (ret == 1)
 		{
-			if (lastTimestamp != 0.0f)
-			{
-				if (lastTimestamp > firstStamp)
-				{
-					printf("error, lastTimestamp > currentTimestamp\n");
-				}
-			}
+			// if (lastTimestamp != 0.0f)
+			// {
+			// 	if (lastTimestamp > firstStamp)
+			// 	{
+			// 		printf("error, lastTimestamp > currentTimestamp\n");
+			// 	}
+			// }
 			lastTimestamp = firstStamp;
 			if(userLidarCallback)
 				userLidarCallback(outMsg, firstStamp);
@@ -517,6 +517,9 @@ void HesaiLidarSDK_internal::processGps(HS_LIDAR_L40_GPS_Packet &gpsMsg)
 	struct tm t;
 	t.tm_sec = gpsMsg.second;
 	t.tm_min = gpsMsg.minute;
+	// t.tm_sec = 0;
+	// t.tm_min = 0;
+
 	t.tm_hour = gpsMsg.hour;
 	t.tm_mday = gpsMsg.day;
 	t.tm_mon = gpsMsg.month - 1;
@@ -539,6 +542,7 @@ void HesaiLidarSDK_internal::processGps(HS_LIDAR_L40_GPS_Packet &gpsMsg)
 		pthread_mutex_unlock(&cameraGpsLock);
 	}
 	// internalFuncForGPS(lidarLastGPSSecond);
+	printf("gps: %d\n", lidarLastGPSSecond);
 	if (userGpsCallback)
 		userGpsCallback(lidarLastGPSSecond);
 

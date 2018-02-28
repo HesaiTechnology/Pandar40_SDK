@@ -46,7 +46,7 @@ void gpsCallback(int timestamp)
   struct timeval ts;
   gettimeofday(&ts, NULL);
   pandoraToSysTimeGap = ts.tv_sec + (double)ts.tv_usec / 1000000 - timestamp;
-  // printf("gps: %d, gap: %f\n", timestamp, pandoraToSysTimeGap);
+  printf("gps: %d, gap: %f\n", timestamp, pandoraToSysTimeGap);
 }
 
 void cameraCallbackForDelay(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)
@@ -78,10 +78,10 @@ int main(int argc, char **argv)
   // PandoraSDK psdk(std::string("172.31.2.165"), 9870, 8080, 10110, 0,
   // std::string("intrinsic.yaml"), std::string("correction.csv"), 
   // cameraCallback, lidarCallback, gpsCallback);
-  HesaiLidarSDK psdk(std::string("192.168.20.51"), 9870, 8080, 10110, 0,
+  HesaiLidarSDK psdk(std::string("192.168.20.51"), 9870, 2368, 10110, 0,
     std::string("calibration.yml"), std::string("correction.csv"),
     cameraCallback, lidarCallback, gpsCallback,
-    0, 40, 0);
+    1, 40, 0);
   // PandoraSDK psdk(std::string("192.168.20.51"), 9870, cameraCallbackForDelay, lidarCallback);
   // PandoraSDK psdk(std::string("/media/yy/Data/pcap/alibaba/lane_line.pcap"), std::string(""), 0, lidarCallback);
   psdk.start();
