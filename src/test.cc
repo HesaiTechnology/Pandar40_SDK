@@ -31,7 +31,8 @@ void cameraCallback(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_i
   struct timeval ts;
   gettimeofday(&ts, NULL);
   // fprintf(cameraTimestampFile, "%d,%f\n", pic_id, ts.tv_sec + (double)ts.tv_usec / 1000000  -  pandoraToSysTimeGap - timestamp);
-  fprintf(cameraTimestampFile, "%d,%f,%f\n", pic_id, timestamp, ts.tv_sec + (double)ts.tv_usec / 1000000  -  pandoraToSysTimeGap - timestamp);
+  fprintf(cameraTimestampFile, "%d,%lf,%lf\n", pic_id, timestamp, (double)ts.tv_sec + (double)ts.tv_usec / 1000000  -  pandoraToSysTimeGap - timestamp);
+  // printf("%d , %f , %lf , %f \n" ,pic_id , timestamp , (double)ts.tv_sec + (double)ts.tv_usec / 1000000 ,pandoraToSysTimeGap);
   // if (pic_id != 0)
   // {
   //   fprintf(cameraTimestampFile, "%d,%f\n", pic_id, timestamp);
@@ -45,7 +46,7 @@ void gpsCallback(int timestamp)
 {
   struct timeval ts;
   gettimeofday(&ts, NULL);
-  pandoraToSysTimeGap = ts.tv_sec + (double)ts.tv_usec / 1000000 - timestamp;
+  pandoraToSysTimeGap = (double)ts.tv_sec + ( (double)ts.tv_usec / 1000000.0  ) - (double)timestamp;
   // printf("gps: %d, gap: %f\n", timestamp, pandoraToSysTimeGap);
 }
 

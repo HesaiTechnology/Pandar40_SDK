@@ -18,7 +18,7 @@ int HS_L40_GPS_Parse(HS_LIDAR_L40_GPS_Packet *packet, const unsigned char *recvb
 	index += HS_LIDAR_L40_GPS_PACKET_SECOND_SIZE;
 	packet->minute = (recvbuf[index] & 0xff - 0x30) + (recvbuf[index + 1] & 0xff - 0x30) * 10;
 	index += HS_LIDAR_L40_GPS_PACKET_MINUTE_SIZE;
-	packet->hour = (recvbuf[index] & 0xff - 0x30) + (recvbuf[index + 1] & 0xff - 0x30) * 10 + 8;
+	packet->hour = (recvbuf[index] & 0xff - 0x30) + (recvbuf[index + 1] & 0xff - 0x30) * 10;
 	index += HS_LIDAR_L40_GPS_PACKET_HOUR_SIZE;
 	packet->fineTime = (recvbuf[index] & 0xff) | (recvbuf[index + 1] & 0xff) << 8 |
 										 ((recvbuf[index + 2] & 0xff) << 16) | ((recvbuf[index + 3] & 0xff) << 24);
@@ -391,7 +391,7 @@ HesaiLidarSDK_internal::HesaiLidarSDK_internal(
 			t.tm_min = pic->header.UTC_Time.UTC_Minute;
 			t.tm_hour = pic->header.UTC_Time.UTC_Hour;
 			t.tm_mday = pic->header.UTC_Time.UTC_Day;
-			t.tm_mon = pic->header.UTC_Time.UTC_Month;
+			t.tm_mon = pic->header.UTC_Time.UTC_Month-1;
 			t.tm_year = pic->header.UTC_Time.UTC_Year + 2000 - 1900;
 			t.tm_isdst = 0;
 			double timestamp = mktime(&t) + pic->header.timestamp / 1000000.0;
@@ -443,7 +443,10 @@ HesaiLidarSDK_internal::HesaiLidarSDK_internal(
 			}
 			}
 			if (userCameraCallback)
-				userCameraCallback(cvMatPic, timestamp, pic->header.pic_id);
+			{
+				// Add 2 seconds to correct the timestamp, Reason? No reason. liuxingwei@hesaitech.com
+				userCameraCallback(cvMatPic, timestamp + 2, pic->header.pic_id);
+			}
 			free(pic->yuv);
 			free(pic);
 			pic->yuv = NULL;
@@ -558,6 +561,7 @@ HesaiLidarSDK_internal::HesaiLidarSDK_internal(
 
 		if (lidarLastGPSSecond != (mktime(&t) + 1))
 		{
+			// Send the last GPS Time when the PPS occurs
 			lidarLastGPSSecond = mktime(&t) + 1;
 			pthread_mutex_lock(&lidarGpsLock);
 			gps2.gps = lidarLastGPSSecond;
