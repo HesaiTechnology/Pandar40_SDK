@@ -46,7 +46,7 @@ void gpsCallback(int timestamp)
   struct timeval ts;
   gettimeofday(&ts, NULL);
   pandoraToSysTimeGap = ts.tv_sec + (double)ts.tv_usec / 1000000 - timestamp;
-  printf("gps: %d, gap: %f\n", timestamp, pandoraToSysTimeGap);
+  // printf("gps: %d, gap: %f\n", timestamp, pandoraToSysTimeGap);
 }
 
 void cameraCallbackForDelay(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)
@@ -70,7 +70,7 @@ void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp)
   //   lidarNo = 0;
   // }
 
-  printf("lidar: %lf\n",cld->points[0].timestamp);
+  // printf("lidar: %lf\n",cld->points[0].timestamp);
   // for(int i = 0; i < cld->points.size();i++)
   //   printf("i: %f\n", cld->points[i].intensity);
 }
