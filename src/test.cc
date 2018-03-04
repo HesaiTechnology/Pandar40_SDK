@@ -37,7 +37,7 @@ void cameraCallback(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_i
   //   fprintf(cameraTimestampFile, "%d,%f\n", pic_id, timestamp);
   //   fflush(cameraTimestampFile);
   // }
-
+  // printf("cameraid: %d, timestamp: %lf\n", pic_id, timestamp);
 }
 
 
@@ -61,7 +61,7 @@ void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp)
 {
   struct timeval ts;
   gettimeofday(&ts, NULL);
-  fprintf(lidarTimestampFile, "%f,%f\n", timestamp, ts.tv_sec + (double)ts.tv_usec / 1000000  -  pandoraToSysTimeGap - timestamp);
+  fprintf(lidarTimestampFile, "%f,%f\n", cld->points[0].timestamp, ts.tv_sec + (double)ts.tv_usec / 1000000  -  pandoraToSysTimeGap - cld->points[0].timestamp);
   // if (++lidarNo == 100)
   // {
   //   char pcdFileName[256];
@@ -70,7 +70,9 @@ void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp)
   //   lidarNo = 0;
   // }
 
-  // std::cout<<"lidar: "<<timestamp<<std::endl;
+  printf("lidar: %lf\n",cld->points[0].timestamp);
+  // for(int i = 0; i < cld->points.size();i++)
+  //   printf("i: %f\n", cld->points[i].intensity);
 }
 
 int main(int argc, char **argv)
@@ -82,8 +84,10 @@ int main(int argc, char **argv)
     std::string("calibration.yml"), std::string("correction.csv"),
     cameraCallback, lidarCallback, gpsCallback,
     1, 40, 0);
+
+  // HesaiLidarSDK psdk(2368, 10110, std::string("correction.csv"), lidarCallback, gpsCallback, 1, 40, 0);
   // PandoraSDK psdk(std::string("192.168.20.51"), 9870, cameraCallbackForDelay, lidarCallback);
-  // PandoraSDK psdk(std::string("/media/yy/Data/pcap/alibaba/lane_line.pcap"), std::string(""), 0, lidarCallback);
+  // HesaiLidarSDK psdk(std::string("/media/yy/Data/pcap/alibaba/lane_line.pcap"), std::string(""), 0, 40, 0, lidarCallback);
   psdk.start();
   while(true)
   {

@@ -44,11 +44,15 @@ public:
 		const unsigned int laserReturnType,
 		const unsigned int laserCount,
 		const unsigned int pclDataType);
-	// HesaiLidarSDK(
-	// 	const std::string pcapPath,
-	// 	const std::string lidarCorrectionFile,
-	// 	const double startAngle,
-	// 	boost::function<void(boost::shared_ptr<PPointCloud> pcloudp, double timestamp)> lidarCallback);
+
+
+	HesaiLidarSDK(
+		const std::string pcapPath,
+		const std::string lidarCorrectionFile,
+		const unsigned int laserReturnType,
+		const unsigned int laserCount,
+		const unsigned int pclDataType,
+		boost::function<void(boost::shared_ptr<PPointCloud> pcloudp, double timestamp)> lidarCallback);
 
 	HesaiLidarSDK(){};
 

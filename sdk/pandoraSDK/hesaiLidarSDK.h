@@ -25,9 +25,9 @@ public:
 		boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int picid)> cameraCallback, 	// 摄像头的callback函数
 		boost::function<void(boost::shared_ptr<PPointCloud> pcloudp, double timestamp)> lidarCallback, 				// lidar的callback函数
 		boost::function<void(unsigned int timestamp)> gpsCallback, 		// gps数据的callback函数，可为NULL.timestamp为当前gps的时间戳
-		const unsigned int laserReturnType,
-		const unsigned int laserCount,
-		const unsigned int pclDataType);													// LiDAR的类型,1为单回波,2为双回波.
+		const unsigned int laserReturnType,											// 回波类型,0为单回波,1为双回波.
+		const unsigned int laserCount,													// lidar的线数量
+		const unsigned int pclDataType);												// 返回给lidarcallback的pcl数据的格式类型.0是以block遍历生成的数据,1是以laserId遍历生成的数据
 	
 	HesaiLidarSDK(
 		const std::string pandoraIP, //此时,lidar的数据接收端口默认为8080, gps数据接收端口默认为10110, lidar的旋转起始角度默认为0, 输出的图像是未经过矫正的, lidar的标定参数使用默认值
@@ -44,11 +44,15 @@ public:
 		const unsigned int laserReturnType,
 		const unsigned int laserCount,
 		const unsigned int pclDataType);
-	// HesaiLidarSDK(
-	// 	const std::string pcapPath,
-	// 	const std::string lidarCorrectionFile,
-	// 	const double startAngle,
-	// 	boost::function<void(boost::shared_ptr<PPointCloud> pcloudp, double timestamp)> lidarCallback);
+
+
+	HesaiLidarSDK(
+		const std::string pcapPath,
+		const std::string lidarCorrectionFile,
+		const unsigned int laserReturnType,
+		const unsigned int laserCount,
+		const unsigned int pclDataType,
+		boost::function<void(boost::shared_ptr<PPointCloud> pcloudp, double timestamp)> lidarCallback);
 
 	HesaiLidarSDK(){};
 

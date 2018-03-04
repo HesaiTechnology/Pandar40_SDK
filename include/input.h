@@ -16,7 +16,7 @@ class Input
 public:
   Input(uint16_t port, uint16_t gpsPort);
   ~Input();
-  Input(std::string filePath);
+  Input(std::string filePath, int type);
   int getPacket(PandarPacket *pkt, const double timeOffset);
   int getPacketFromPcap(PandarPacket *pkt);
 private:
@@ -26,6 +26,7 @@ private:
   pcap_t *pcap_;
   std::string pcapFilePath;
   char pcapErrorBuffer[PCAP_ERRBUF_SIZE];
+  int realLidarPacketSize;
   struct timeval getPacketStartTime, getPacketStopTime;
 };
 

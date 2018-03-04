@@ -12,11 +12,15 @@
 
 namespace pandar_pointcloud
 {
-const int lidarPacketSize = sizeof(PandarPacket().data);
+const int lidarPacketSize = ETHERNET_MTU;
 
 
-Input::Input(std::string filePath)
+Input::Input(std::string filePath, int type)
 {
+  if(type == 0)
+    realLidarPacketSize = 1240;
+  else if(type == 1)
+    realLidarPacketSize = 1256;
   pcapFilePath = filePath;
   if ((pcap_ = pcap_open_offline(pcapFilePath.c_str(), pcapErrorBuffer) ) == NULL)
   {
@@ -159,6 +163,7 @@ int Input::getPacket(PandarPacket *pkt, const double timeOffset)
       return -1;
     }
   }
+  pkt->size = nbytes;
 
   gettimeofday(&getPacketStopTime, NULL);
   pkt->stamp = static_cast<double>(getPacketStartTime.tv_sec + static_cast<double>(getPacketStartTime.tv_usec) / 1000000 + getPacketStopTime.tv_sec + static_cast<double>(getPacketStopTime.tv_usec) / 1000000) / 2;
@@ -171,26 +176,25 @@ int Input::getPacket(PandarPacket *pkt, const double timeOffset)
 
 int Input::getPacketFromPcap(PandarPacket *pkt)
 {
-
   struct pcap_pkthdr *header;
-  const u_char *pkt_data;
+  const u_char *pkdGdata;
 
-  int ret = pcap_next_ex(pcap_, &header, &pkt_data);
+  int ret = pcap_next_ex(pcap_, &header, &pkdGdata);
 
   if ( ret == 1)
   {
-    memcpy(&pkt->data[0], pkt_data + 42, lidarPacketSize);
+    memcpy(&pkt->data[0], pkdGdata + 42, realLidarPacketSize);
     if (header->caplen == (PANDORA_GPS_PACKET_SIZE + 42)) // gps packet
     {
-      // memcpy(&pkt->data[0], pkt_data + 42, PANDORA_GPS_PACKET_SIZE);
+      // memcpy(&pkt->data[0], pkdGdata + 42, PANDORA_GPS_PACKET_SIZE);
       return 1;
     }
 
-    else if (header->caplen == (lidarPacketSize + 42))
+    else if (header->caplen == (realLidarPacketSize + 42))
     {
-      
       gettimeofday(&getPacketStartTime, NULL);
       pkt->stamp = getPacketStartTime.tv_sec + static_cast<double>(getPacketStartTime.tv_usec) / 1000000;
+      pkt->size = realLidarPacketSize;
       return 0; // success
     }
     return -1;
