@@ -7,7 +7,10 @@ int lidarNo = 0;
 unsigned long lidarNoForSave = 0;
 FILE* cameraTimestampFile = fopen("camera-timestamp.txt", "w");
 FILE* lidarTimestampFile = fopen("lidar-timestamp.txt", "w");
+FILE* gpsTimestampFile = fopen("gps-timestamp.txt", "w");
+
 double pandoraToSysTimeGap = 0;
+int gpsTimestamp = 0;
 
 void cameraCallback(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)
 {
@@ -46,8 +49,10 @@ void gpsCallback(int timestamp)
 {
   struct timeval ts;
   gettimeofday(&ts, NULL);
+  gpsTimestamp = timestamp;
   pandoraToSysTimeGap = (double)ts.tv_sec + ( (double)ts.tv_usec / 1000000.0  ) - (double)timestamp;
   // printf("gps: %d, gap: %f\n", timestamp, pandoraToSysTimeGap);
+  fprintf(gpsTimestampFile, "%d, %f, %f\n", timestamp, ts.tv_sec + ts.tv_usec / 1000000.0, pandoraToSysTimeGap);
 }
 
 void cameraCallbackForDelay(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)
@@ -62,7 +67,7 @@ void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp)
 {
   struct timeval ts;
   gettimeofday(&ts, NULL);
-  fprintf(lidarTimestampFile, "%f,%f\n", cld->points[0].timestamp, ts.tv_sec + (double)ts.tv_usec / 1000000  -  pandoraToSysTimeGap - cld->points[0].timestamp);
+  fprintf(lidarTimestampFile, "%d, %f,%f\n", gpsTimestamp, timestamp, ts.tv_sec + (double)ts.tv_usec / 1000000  -  pandoraToSysTimeGap - timestamp);
   // if (++lidarNo == 100)
   // {
   //   char pcdFileName[256];
