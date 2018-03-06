@@ -459,7 +459,7 @@ void HesaiLidarSDK_internal::processLiarPacket()
 		// printf("gps: %d\n", gps1);
 		int ret = data_->unpack(packet, *outMsg, gps1, gps2, lidarRotationStartAngle);
 		pthread_mutex_unlock(&lidarGpsLock);
-		if (ret == 1)
+		if (ret == 1 && outMsg->points.size() > 0)
 		{
 			lastTimestamp = outMsg->points[0].timestamp;
 			if (userLidarCallback)
