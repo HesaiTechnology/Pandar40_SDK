@@ -413,7 +413,7 @@ void HesaiLidarSDK_internal::lidarRecvTask()
 	while (continueLidarRecvThread)
 	{
 		PandarPacket pkt;
-		int rc = input->getPacket(&pkt, 0);
+		int rc = input->getPacket(&pkt);
 		if (rc == -1)
 		{
 			continue;

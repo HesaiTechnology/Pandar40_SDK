@@ -102,7 +102,7 @@ Input::~Input(void)
 // return : 0 - lidar
 //          1 - gps
 //          -1 - error
-int Input::getPacket(PandarPacket *pkt, const double timeOffset)
+int Input::getPacket(PandarPacket *pkt)
 {
   gettimeofday(&getPacketStartTime, NULL);
   struct pollfd fds[socketNumber];
