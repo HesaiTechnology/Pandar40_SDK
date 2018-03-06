@@ -43,13 +43,13 @@ typedef struct HS_LIDAR_L40_GPS_PACKET_s
 #define HesaiLidarSDK_IMAGE_WIDTH 1280
 #define HesaiLidarSDK_IMAGE_HEIGHT 720
 // 10000 us  = 100 ms = 0.1s per packet
-#define HesaiLidarSDK_PCAP_TIME_INTERVAL 100000
+#define HesaiLidarSDK_PCAP_TIME_INTERVAL (100000 / 3000)
 
 enum PandoraUseMode
 {
-	PandoraUseMode_onlyLidar,			// 仅使用lidar
-	PandoraUseMode_readPcap,			// 仅使用lidar读取pcap
-	PandoraUseMode_lidarAndCamera //使用lidar和camera
+	PandoraUseModeOnlyLidar,			// 仅使用lidar
+	PandoraUseModeReadPcap,			// 仅读取lidar的pcap
+	PandoraUseModeLidarAndCamera //使用lidar和camera
 };
 
 class HesaiLidarSDK_internal
@@ -124,7 +124,7 @@ private:
 	void internalFuncForGPS(const unsigned int &gpsstamp);
 
 	PandoraUseMode useMode;
-	pthread_mutex_t lidarLock, picLock, lidarGpsLock, cameraGpsLock;
+	pthread_mutex_t lidarLock, picLock, lidarGpsLock;
 	sem_t lidarSem, picSem;
 	boost::thread *lidarRecvThread;
 	boost::thread *lidarProcessThread;
@@ -154,11 +154,8 @@ private:
 	boost::shared_ptr<pandar_rawdata::RawData> data_;
 	time_t gps1;
 	GPS_STRUCT_T gps2;
-	time_t gps1Cam[HesaiLidarSDK_CAMERA_NUM];
-	GPS_STRUCT_T gps2Cam[HesaiLidarSDK_CAMERA_NUM];
 	unsigned int lidarLastGPSSecond;
 	unsigned int cameraLastGPSSecond;
-	unsigned int cameraTimestamp[HesaiLidarSDK_CAMERA_NUM];
 };
 
 #endif

@@ -177,21 +177,21 @@ int Input::getPacket(PandarPacket *pkt, const double timeOffset)
 int Input::getPacketFromPcap(PandarPacket *pkt)
 {
   struct pcap_pkthdr *header;
-  const u_char *pkdGdata;
+  const u_char *pcapData;
 
-  int ret = pcap_next_ex(pcap_, &header, &pkdGdata);
+  int ret = pcap_next_ex(pcap_, &header, &pcapData);
 
   if ( ret == 1)
   {
-    memcpy(&pkt->data[0], pkdGdata + 42, realLidarPacketSize);
     if (header->caplen == (PANDORA_GPS_PACKET_SIZE + 42)) // gps packet
     {
-      // memcpy(&pkt->data[0], pkdGdata + 42, PANDORA_GPS_PACKET_SIZE);
+      memcpy(&pkt->data[0], pcapData + 42, PANDORA_GPS_PACKET_SIZE);
       return 1;
     }
 
     else if (header->caplen == (realLidarPacketSize + 42))
     {
+      memcpy(&pkt->data[0], pcapData + 42, realLidarPacketSize);
       gettimeofday(&getPacketStartTime, NULL);
       pkt->stamp = getPacketStartTime.tv_sec + static_cast<double>(getPacketStartTime.tv_usec) / 1000000;
       pkt->size = realLidarPacketSize;

@@ -83,7 +83,7 @@ typedef struct RAW_BLOCK
     uint16_t sob;
     uint16_t azimuth;
     RAW_MEASURE_T measures[MAX_LASER_COUNT];
-    int laserCount;
+    // int laserCount;
 } RAW_BLOCK_T;
 
 typedef struct RAW_PACKET
@@ -190,7 +190,7 @@ private:
     int lastTimestamp;
     int lastAzumith;
     DeviceType deviceType;
-    int laserCount;
+    int laserCountType;
     unsigned int pclDataType;
     int pandarEnableList[MAX_LASER_COUNT];
 };

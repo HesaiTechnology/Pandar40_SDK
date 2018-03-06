@@ -55,7 +55,7 @@ HesaiLidarSDK::HesaiLidarSDK(
 {
 	psi = new HesaiLidarSDK_internal(
 		std::string(""),
-		0,
+		9870,
 		lidarRecvPort,
 		gpsRecvPort,
 		0,

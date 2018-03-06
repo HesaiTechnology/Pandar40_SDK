@@ -1,7 +1,6 @@
 #include <fstream>
 #include <math.h>
 #include "rawdata.h"
-#include <map>
 
 namespace pandar_rawdata
 {
@@ -135,9 +134,9 @@ static int pandarEnableListP40[40] = {
     1};
 
 static double blockOffset[BLOCKS_PER_PACKET];
-static double laserOffset[LASER_COUNT];
+static double laserOffset[MAX_LASER_COUNT];
 
-static double blockOffsetDualVersion[DUAL_VERSION_LASER_COUNT];
+static double blockOffsetDualVersion[MAX_LASER_COUNT];
 
 RawData::RawData(const std::string &correctionFile,
                  const unsigned int laserReturnType,
@@ -150,8 +149,8 @@ RawData::RawData(const std::string &correctionFile,
 
   pclDataType = pclType;
 
-  laserCount = laserNumber;
-  switch (laserCount)
+  laserCountType = laserNumber;
+  switch (laserCountType)
   {
     case 16:
       for (int i = 0; i != LASER_COUNT; i++)
@@ -274,12 +273,12 @@ int RawData::parseRawData(RAW_PACKET_T *packet, const uint8_t *buf, const int le
     for (int i = 0; i < BLOCKS_PER_PACKET; i++)
     {
       RAW_BLOCK_T &block = packet->blocks[i];
-      block.laserCount = laserCount;
+      // block.laserCount = laserCount;
       block.sob = (buf[index] & 0xff) | ((buf[index + 1] & 0xff) << 8);
       block.azimuth = (buf[index + 2] & 0xff) | ((buf[index + 3] & 0xff) << 8);
       index += SOB_ANGLE_SIZE;
       // 40x measures
-      for (int j = 0; j < laserCount; j++)
+      for (int j = 0; j < LASER_COUNT; j++)
       {
         RAW_MEASURE_T &measure = block.measures[j];
         unsigned int range = (buf[index] & 0xff) | ((buf[index + 1] & 0xff) << 8) | ((buf[index + 2] & 0xff) << 16);
@@ -302,6 +301,7 @@ int RawData::parseRawData(RAW_PACKET_T *packet, const uint8_t *buf, const int le
 
     packet->timestamp = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 |
                         ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
+    // printf("packet timestamp: %ld\n", packet->timestamp);
 
     packet->blockAmount = BLOCKS_PER_PACKET;
   }
@@ -319,12 +319,12 @@ int RawData::parseRawData(RAW_PACKET_T *packet, const uint8_t *buf, const int le
     {
       RAW_BLOCK_T &block = packet->blocks[i];
       
-      block.laserCount = laserCount;
+      // block.laserCount = laserCount;
       block.sob = (buf[index] & 0xff) | ((buf[index + 1] & 0xff) << 8);
       block.azimuth = (buf[index + 2] & 0xff) | ((buf[index + 3] & 0xff) << 8);
       index += DUAL_VERSION_SOB_ANGLE_SIZE;
       // 40x measures
-      for (int j = 0; j < laserCount; j++)
+      for (int j = 0; j < LASER_COUNT; j++)
       {
         RAW_MEASURE_T &measure = block.measures[j];
         unsigned int range = (buf[index] & 0xff) | ((buf[index + 1] & 0xff) << 8);
@@ -350,6 +350,7 @@ int RawData::parseRawData(RAW_PACKET_T *packet, const uint8_t *buf, const int le
 
     packet->timestamp = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 |
                         ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
+
     index += DUAL_VERSION_TIMESTAMP_SIZE;
     packet->echo = buf[index] & 0xff;
     packet->blockAmount = DUAL_VERSION_BLOCKS_PER_PACKET;
@@ -492,10 +493,11 @@ void RawData::toPointClouds(
     int block, PPointCloud &pc,
     double stamp)
 {
-  int first = 0;
   const RAW_BLOCK_T &firingData = packet->blocks[block];
-  for (int i = 0; i < laserCount; i++)
+  for (int i = 0; i < LASER_COUNT; i++)
   {
+    if(pandarEnableList[i] != 1)
+      continue;
     PPoint xyzir;
     computeXYZIR(xyzir, firingData.azimuth,
                  firingData.measures[i], calibration_.laserCorrections[i]);
@@ -510,7 +512,7 @@ void RawData::toPointClouds(
     {
       if(packet->echo == 0x39)
         xyzir.timestamp = stamp - ((double)(blockOffsetDualVersion[block / 2] + laserOffset[i / 2]) / 1000000.0f);
-      else if(packet->echo == 0x37 || packet->echo == 0x37)
+      else if(packet->echo == 0x37 || packet->echo == 0x38)
         xyzir.timestamp = stamp - ((double)(blockOffsetDualVersion[block] + laserOffset[i]) / 1000000.0f);
 
     }
@@ -532,12 +534,23 @@ void RawData::toPointClouds(
     PPoint xyzir;
     computeXYZIR(xyzir, firing_data.azimuth,
                  firing_data.measures[laser], calibration_.laserCorrections[laser]);
+    
+    if(deviceType == deviceTypeSingleReturn)
+      xyzir.timestamp = blockstamp - ((double)(blockOffset[block] + laserOffset[i]) / 1000000.0f);
+    else if(deviceType == deviceTypeDualReturn)
+    {
+      if(packet->echo == 0x39)
+        xyzir.timestamp = blockstamp - ((double)(blockOffsetDualVersion[block / 2] + laserOffset[i / 2]) / 1000000.0f);
+      else if(packet->echo == 0x37 || packet->echo == 0x37)
+        xyzir.timestamp = blockstamp - ((double)(blockOffsetDualVersion[block] + laserOffset[i]) / 1000000.0f);
+
+    }
     // if (pcl_isnan (xyzir.x) || pcl_isnan (xyzir.y) || pcl_isnan (xyzir.z))
     // {
     //     return;
     // }
     // xyzir.ring = laser;
-    xyzir.timestamp = blockstamp - ((blockOffset[block] + laserOffset[laser]) / 1000000);
+    // xyzir.timestamp = blockstamp - ((blockOffset[block] + laserOffset[laser]) / 1000000);
     pc.points.push_back(xyzir);
     pc.width++;
   }
@@ -691,7 +704,7 @@ int RawData::unpack(
       int first = 1;
       std::vector<double> blockTimestamp;
 
-      for (int i = 0; i < laserCount; i++)
+      for (int i = 0; i < LASER_COUNT; i++)
       {
         if (pandarEnableList[i] == 1)
         {
