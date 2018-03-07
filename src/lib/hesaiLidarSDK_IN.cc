@@ -1,7 +1,10 @@
 
 #include "hesaiLidarSDK_IN.h"
 #include "utilities.h"
+
+#ifdef HESAI_WITH_CAMERA 
 Size HesaiLidarSDK_IMAGE_SIZE(HesaiLidarSDK_IMAGE_WIDTH, HesaiLidarSDK_IMAGE_HEIGHT);
+#endif
 
 int HS_L40_GPS_Parse(HS_LIDAR_L40_GPS_Packet *packet, const unsigned char *recvbuf)
 {
@@ -25,13 +28,6 @@ int HS_L40_GPS_Parse(HS_LIDAR_L40_GPS_Packet *packet, const unsigned char *recvb
 	return 0;
 }
 
-static int cameraClientCallback(void *handle, int cmd, void *param, void *userp)
-{
-	PandoraPic *pic = (PandoraPic *)param;
-	HesaiLidarSDK_internal *pSDK = (HesaiLidarSDK_internal *)userp;
-	pSDK->pushPicture(pic);
-	return 0;
-}
 
 void HesaiLidarSDK_internal::init(
 		const std::string pcapPath,
@@ -59,48 +55,33 @@ void HesaiLidarSDK_internal::init(
 }
 
 void HesaiLidarSDK_internal::init(
-		const std::string pandoraIP,
-		const unsigned short pandoraCameraPort,
-		const unsigned short lidarRecvPort,
-		const unsigned short gpsRecvPort,
-		const double startAngle,
-		const std::string intrinsicFile,
-		const std::string lidarCorrectionFile,
-		boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
-		boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
-		boost::function<void(unsigned int timestamp)> gpsCallback,
-		const unsigned int laserReturnType,
-		const unsigned int laserCount,
-		const unsigned int pclDataType)
+#ifdef HESAI_WITH_CAMERA 
+			const std::string pandoraIP,
+			const unsigned short pandoraCameraPort,
+			const std::string intrinsicFile,
+			boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
+#endif
+			const unsigned short lidarRecvPort,
+			const unsigned short gpsRecvPort,
+			const double startAngle,			
+			const std::string lidarCorrectionFile,
+			boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
+			boost::function<void(unsigned int timestamp)> gpsCallback,
+			const unsigned int laserReturnType,
+			const unsigned int laserCount,
+			const unsigned int pclDataType)
 {
+#ifdef HESAI_WITH_CAMERA 
 	ip = pandoraIP;
 	cport = pandoraCameraPort;
 	userCameraCallback = cameraCallback;
-	userLidarCallback = lidarCallback;
-	userGpsCallback = gpsCallback;
-	lidarRotationStartAngle = static_cast<int>(startAngle * 100);
-
-	gps1 = 0;
-	gps2.gps = 0;
-	gps2.used = 1;
-	gps2.usedHour = 1;
 	if (ip.empty())
 		useMode = PandoraUseModeOnlyLidar;
 	else
 		useMode = PandoraUseModeLidarAndCamera;
-	sem_init(&lidarSem, 0, 0);
-	sem_init(&picSem, 0, 0);
-	pthread_mutex_init(&lidarLock, NULL);
 	pthread_mutex_init(&picLock, NULL);
-	pthread_mutex_init(&lidarGpsLock, NULL);
-
-	lidarRecvThread = 0;
-	lidarProcessThread = 0;
 	processPicThread = 0;
-	pandoraCameraClient = NULL;
-
-	input.reset(new pandar_pointcloud::Input(lidarRecvPort, gpsRecvPort));
-	data_.reset(new pandar_rawdata::RawData(lidarCorrectionFile, laserReturnType, laserCount, pclDataType));
+	sem_init(&picSem, 0, 0);
 
 	if (intrinsicFile.empty())
 	{
@@ -113,53 +94,88 @@ void HesaiLidarSDK_internal::init(
 		else
 			needRemapPicMat = false;
 	}
+	pandoraCameraClient = NULL;
+#endif
+
+	userLidarCallback = lidarCallback;
+	userGpsCallback = gpsCallback;
+	lidarRotationStartAngle = static_cast<int>(startAngle * 100);
+
+	gps1 = 0;
+	gps2.gps = 0;
+	gps2.used = 1;
+	gps2.usedHour = 1;
+	lidarLastGPSHourSecond = 0;
+	
+	sem_init(&lidarSem, 0, 0);
+	
+	pthread_mutex_init(&lidarLock, NULL);
+	pthread_mutex_init(&lidarGpsLock, NULL);
+
+	lidarRecvThread = 0;
+	lidarProcessThread = 0;
+	
+	
+
+	input.reset(new pandar_pointcloud::Input(lidarRecvPort, gpsRecvPort));
+	data_.reset(new pandar_rawdata::RawData(lidarCorrectionFile, laserReturnType, laserCount, pclDataType));
 }
 
 HesaiLidarSDK_internal::HesaiLidarSDK_internal(
-		const std::string pandoraIP,
-		const unsigned short pandoraCameraPort,
-		const unsigned short lidarRecvPort,
-		const unsigned short gpsRecvPort,
-		const double startAngle,
-		const std::string intrinsicFile,
-		const std::string lidarCorrectionFile,
-		boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
-		boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
-		boost::function<void(double timestamp)> gpsCallback,
-		const unsigned int laserReturnType,
-		const unsigned int laserCount,
-		const unsigned int pclDataType)
+#ifdef HESAI_WITH_CAMERA 
+			const std::string pandoraIP,
+			const unsigned short pandoraCameraPort,
+			const std::string intrinsicFile,
+			boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
+#endif
+			const unsigned short lidarRecvPort,
+			const unsigned short gpsRecvPort,
+			const double startAngle,			
+			const std::string lidarCorrectionFile,
+			boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
+			boost::function<void(unsigned int timestamp)> gpsCallback,
+			const unsigned int laserReturnType,
+			const unsigned int laserCount,
+			const unsigned int pclDataType)
 
 {
 	init(
+#ifdef HESAI_WITH_CAMERA 
 			pandoraIP,
 			pandoraCameraPort,
+			intrinsicFile,
+			cameraCallback,
+#endif
 			lidarRecvPort,
 			gpsRecvPort,
 			startAngle,
-			intrinsicFile,
+			
 			lidarCorrectionFile,
-			cameraCallback,
+			
 			lidarCallback,
 			gpsCallback,
 			laserReturnType, laserCount, pclDataType);
 }
 
 HesaiLidarSDK_internal::HesaiLidarSDK_internal(
-		const std::string pandoraIP,
-		const unsigned short pandoraCameraPort,
-		boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
-		boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback)
+#ifdef HESAI_WITH_CAMERA 
+			const std::string pandoraIP,
+			const unsigned short pandoraCameraPort,
+			boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
+#endif
+			boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback)
 {
 	init(
+#ifdef HESAI_WITH_CAMERA 
 			pandoraIP,
 			pandoraCameraPort,
+			std::string(""),
+			cameraCallback,
+#endif
 			HesaiLidarSDK_DEFAULT_LIDAR_RECV_PORT,
 			HesaiLidarSDK_DEFAULT_GPS_RECV_PORT,
 			HesaiLidarSDK_DEFAULT_START_ANGLE,
 			std::string(""),
-			std::string(""),
-			cameraCallback,
 			lidarCallback,
 			NULL, 0, 40, 0);
 }
@@ -186,24 +202,6 @@ HesaiLidarSDK_internal::~HesaiLidarSDK_internal()
 	stop();
 }
 
-bool HesaiLidarSDK_internal::loadIntrinsics(const std::string &intrinsicFile)
-{
-	std::vector<cv::Mat> cameraKList;
-	std::vector<cv::Mat> cameraDList;
-	if (!loadCameraIntrinsics(intrinsicFile.c_str(), cameraKList, cameraDList))
-		return false;
-	for (int i = 0; i < HesaiLidarSDK_CAMERA_NUM; i++)
-	{
-		Mat mapx = Mat(HesaiLidarSDK_IMAGE_SIZE, CV_32FC1);
-		Mat mapy = Mat(HesaiLidarSDK_IMAGE_SIZE, CV_32FC1);
-		Mat R = Mat::eye(3, 3, CV_32F);
-		initUndistortRectifyMap(cameraKList[i], cameraDList[i], R, cameraKList[i], HesaiLidarSDK_IMAGE_SIZE, CV_32FC1, mapx, mapy);
-		mapxList.push_back(mapx);
-		mapyList.push_back(mapy);
-	}
-	return true;
-}
-
 int HesaiLidarSDK_internal::start()
 {
 	stop();
@@ -220,12 +218,15 @@ int HesaiLidarSDK_internal::start()
 		setupLidarClient();
 		break;
 	}
+#ifdef HESAI_WITH_CAMERA 
 	case PandoraUseModeLidarAndCamera:
 	{
+
 		setupCameraClient();
 		setupLidarClient();
 		break;
 	}
+#endif
 	default:
 	{
 		printf("wrong useMode\n");
@@ -242,13 +243,6 @@ void HesaiLidarSDK_internal::setupReadPcap()
 	readPacpThread = new boost::thread(boost::bind(&HesaiLidarSDK_internal::readPcapFile, this));
 	continueProcessLidarPacket = true;
 	lidarProcessThread = new boost::thread(boost::bind(&HesaiLidarSDK_internal::processLiarPacket, this));
-}
-
-void HesaiLidarSDK_internal::setupCameraClient()
-{
-	continueProcessPic = true;
-	pandoraCameraClient = PandoraClientNew(ip.c_str(), cport, cameraClientCallback, this);
-	processPicThread = new boost::thread(boost::bind(&HesaiLidarSDK_internal::processPic, this));
 }
 
 void HesaiLidarSDK_internal::setupLidarClient()
@@ -289,7 +283,7 @@ void HesaiLidarSDK_internal::stop()
 {
 	continueLidarRecvThread = false;
 	continueProcessLidarPacket = false;
-	continueProcessPic = false;
+	
 	continueReadPcap = false;
 
 	if (lidarProcessThread)
@@ -304,22 +298,161 @@ void HesaiLidarSDK_internal::stop()
 		delete lidarRecvThread;
 		lidarRecvThread = 0;
 	}
+#ifdef HESAI_WITH_CAMERA 
+	continueProcessPic = false;
 	if (pandoraCameraClient)
 	{
 		PandoraClientDestroy(pandoraCameraClient);
 		pandoraCameraClient = NULL;
 	}
+
 	if (processPicThread)
 	{
 		processPicThread->join();
 		delete processPicThread;
 		processPicThread = 0;
 	}
+#endif
 	if (readPacpThread)
 	{
 		readPacpThread->join();
 		readPacpThread = 0;
 	}
+}
+
+
+
+
+
+
+void HesaiLidarSDK_internal::lidarRecvTask()
+{
+	while (continueLidarRecvThread)
+	{
+		PandarPacket pkt;
+		int rc = input->getPacket(&pkt);
+		if (rc == -1)
+		{
+			continue;
+		}
+		if (rc == 1)
+		{
+			// gps packet;
+			HS_L40_GPS_Parse(&hesaiGps, &pkt.data[0]);
+			processGps(hesaiGps);
+			continue;
+		}
+		pushLiDARData(pkt);
+		// internalAnalysisPacket(pkt);
+	}
+}
+
+void HesaiLidarSDK_internal::processLiarPacket()
+{
+	double lastTimestamp = 0.0f;
+	struct timespec ts;
+
+	while (continueProcessLidarPacket)
+	{
+		boost::shared_ptr<PPointCloud> outMsg(new PPointCloud());
+		if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
+		{
+			printf("get time error\n");
+		}
+
+		ts.tv_sec += 1;
+		if (sem_timedwait(&lidarSem, &ts) == -1)
+		{
+			continue;
+		}
+		pthread_mutex_lock(&lidarLock);
+		PandarPacket packet = lidarPacketList.front();
+		lidarPacketList.pop_front();
+		pthread_mutex_unlock(&lidarLock);
+		outMsg->header.frame_id = "pandar";
+		outMsg->height = 1;
+
+		pthread_mutex_lock(&lidarGpsLock);
+		// printf("gps: %d\n", gps1);
+		int ret = data_->unpack(packet, *outMsg, gps1, gps2, lidarRotationStartAngle);
+		pthread_mutex_unlock(&lidarGpsLock);
+		if (ret == 1 && outMsg->points.size() > 0)
+		{
+			lastTimestamp = outMsg->points[0].timestamp;
+			if (userLidarCallback)
+				userLidarCallback(outMsg, lastTimestamp);
+		}
+	}
+}
+
+void HesaiLidarSDK_internal::pushLiDARData(PandarPacket packet)
+{
+	pthread_mutex_lock(&lidarLock);
+	lidarPacketList.push_back(packet);
+	if (lidarPacketList.size() > 6)
+	{
+		sem_post(&lidarSem);
+	}
+	pthread_mutex_unlock(&lidarLock);
+}
+
+void HesaiLidarSDK_internal::processGps(HS_LIDAR_L40_GPS_Packet &gpsMsg)
+{
+	struct tm t;
+	
+	t.tm_sec = 0;
+	t.tm_min = 0;
+
+	t.tm_hour = gpsMsg.hour;
+	t.tm_mday = gpsMsg.day;
+	t.tm_mon = gpsMsg.month - 1;
+	t.tm_year = gpsMsg.year + 2000 - 1900;
+	t.tm_isdst = 0;
+
+	int curlidarLastGPSHourSecond = mktime(&t);
+
+	t.tm_sec = gpsMsg.second;
+	t.tm_min = gpsMsg.minute;
+
+	if (lidarLastGPSSecond != (mktime(&t) + 1))
+	{
+		// Send the last GPS Time when the PPS occurs
+		lidarLastGPSSecond = mktime(&t) + 1;
+		pthread_mutex_lock(&lidarGpsLock);
+		gps2.gps = lidarLastGPSSecond;
+		gps2.used = 0;
+		if (curlidarLastGPSHourSecond != lidarLastGPSHourSecond)
+		{
+			lidarLastGPSHourSecond = curlidarLastGPSHourSecond;
+			gps2.usedHour = 0;
+		}
+
+		memcpy(&gps2.t, &t, sizeof(struct tm));
+		gps2.t.tm_min = 0;
+		gps2.t.tm_sec = 0;
+
+		pthread_mutex_unlock(&lidarGpsLock);
+	}
+	if (userGpsCallback)
+		userGpsCallback(lidarLastGPSSecond);
+}
+
+
+#ifdef HESAI_WITH_CAMERA 
+
+static int cameraClientCallback(void *handle, int cmd, void *param, void *userp)
+{
+	PandoraPic *pic = (PandoraPic *)param;
+	HesaiLidarSDK_internal *pSDK = (HesaiLidarSDK_internal *)userp;
+	pSDK->pushPicture(pic);
+	return 0;
+}
+
+void HesaiLidarSDK_internal::setupCameraClient()
+{
+	continueProcessPic = true;
+	pandoraCameraClient = PandoraClientNew(ip.c_str(), cport, cameraClientCallback, this);
+	processPicThread = new boost::thread(boost::bind(&HesaiLidarSDK_internal::processPic, this));
 }
 
 void HesaiLidarSDK_internal::pushPicture(PandoraPic *pic)
@@ -408,108 +541,25 @@ void HesaiLidarSDK_internal::processPic()
 	}
 }
 
-void HesaiLidarSDK_internal::lidarRecvTask()
+bool HesaiLidarSDK_internal::loadIntrinsics(const std::string &intrinsicFile)
 {
-	while (continueLidarRecvThread)
+	std::vector<cv::Mat> cameraKList;
+	std::vector<cv::Mat> cameraDList;
+	if (!loadCameraIntrinsics(intrinsicFile.c_str(), cameraKList, cameraDList))
+		return false;
+	for (int i = 0; i < HesaiLidarSDK_CAMERA_NUM; i++)
 	{
-		PandarPacket pkt;
-		int rc = input->getPacket(&pkt);
-		if (rc == -1)
-		{
-			continue;
-		}
-		if (rc == 1)
-		{
-			// gps packet;
-			HS_L40_GPS_Parse(&hesaiGps, &pkt.data[0]);
-			processGps(hesaiGps);
-			continue;
-		}
-		pushLiDARData(pkt);
-		// internalAnalysisPacket(pkt);
+		Mat mapx = Mat(HesaiLidarSDK_IMAGE_SIZE, CV_32FC1);
+		Mat mapy = Mat(HesaiLidarSDK_IMAGE_SIZE, CV_32FC1);
+		Mat R = Mat::eye(3, 3, CV_32F);
+		initUndistortRectifyMap(cameraKList[i], cameraDList[i], R, cameraKList[i], HesaiLidarSDK_IMAGE_SIZE, CV_32FC1, mapx, mapy);
+		mapxList.push_back(mapx);
+		mapyList.push_back(mapy);
 	}
+	return true;
 }
 
-void HesaiLidarSDK_internal::processLiarPacket()
-{
-	double lastTimestamp = 0.0f;
-	struct timespec ts;
 
-	while (continueProcessLidarPacket)
-	{
-		boost::shared_ptr<PPointCloud> outMsg(new PPointCloud());
-		if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
-		{
-			printf("get time error\n");
-		}
 
-		ts.tv_sec += 1;
-		if (sem_timedwait(&lidarSem, &ts) == -1)
-		{
-			continue;
-		}
-		pthread_mutex_lock(&lidarLock);
-		PandarPacket packet = lidarPacketList.front();
-		lidarPacketList.pop_front();
-		pthread_mutex_unlock(&lidarLock);
-		outMsg->header.frame_id = "pandar";
-		outMsg->height = 1;
 
-		pthread_mutex_lock(&lidarGpsLock);
-		// printf("gps: %d\n", gps1);
-		int ret = data_->unpack(packet, *outMsg, gps1, gps2, lidarRotationStartAngle);
-		pthread_mutex_unlock(&lidarGpsLock);
-		if (ret == 1 && outMsg->points.size() > 0)
-		{
-			lastTimestamp = outMsg->points[0].timestamp;
-			if (userLidarCallback)
-				userLidarCallback(outMsg, lastTimestamp);
-		}
-	}
-}
-
-void HesaiLidarSDK_internal::pushLiDARData(PandarPacket packet)
-{
-	pthread_mutex_lock(&lidarLock);
-	lidarPacketList.push_back(packet);
-	if (lidarPacketList.size() > 6)
-	{
-		sem_post(&lidarSem);
-	}
-	pthread_mutex_unlock(&lidarLock);
-}
-
-void HesaiLidarSDK_internal::processGps(HS_LIDAR_L40_GPS_Packet &gpsMsg)
-{
-	struct tm t;
-	t.tm_sec = gpsMsg.second;
-	t.tm_min = gpsMsg.minute;
-	// t.tm_sec = 0;
-	// t.tm_min = 0;
-
-	t.tm_hour = gpsMsg.hour;
-	t.tm_mday = gpsMsg.day;
-	t.tm_mon = gpsMsg.month - 1;
-	t.tm_year = gpsMsg.year + 2000 - 1900;
-	t.tm_isdst = 0;
-	if (lidarLastGPSSecond != (mktime(&t) + 1))
-	{
-		// Send the last GPS Time when the PPS occurs
-		lidarLastGPSSecond = mktime(&t) + 1;
-		pthread_mutex_lock(&lidarGpsLock);
-		gps2.gps = lidarLastGPSSecond;
-		gps2.used = 0;
-		if (gps2.t.tm_hour != t.tm_hour)
-		{
-			gps2.usedHour = 0;
-		}
-
-		memcpy(&gps2.t, &t, sizeof(struct tm));
-		gps2.t.tm_min = 0;
-		gps2.t.tm_sec = 0;
-
-		pthread_mutex_unlock(&lidarGpsLock);
-	}
-	if (userGpsCallback)
-		userGpsCallback(lidarLastGPSSecond);
-}
+#endif

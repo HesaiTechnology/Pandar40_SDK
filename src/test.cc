@@ -91,9 +91,9 @@ int main(int argc, char **argv)
   //   cameraCallback, lidarCallback, gpsCallback,
   //   1, 40, 0);
 
-  HesaiLidarSDK psdk(2368, 10110, std::string("correction.csv"), lidarCallback, gpsCallback, 1, 40, 0);
-  // PandoraSDK psdk(std::string("192.168.20.51"), 9870, cameraCallbackForDelay, lidarCallback);
-  char* ip = "/media/yy/Data/pcap/pandora/192.168.20.51/1112-gps.pcap";
+  // HesaiLidarSDK psdk(2368, 10110, std::string("correction.csv"), lidarCallback, gpsCallback, 1, 40, 0);
+  HesaiLidarSDK psdk(std::string("192.168.20.51"), 9870, cameraCallbackForDelay, lidarCallback);
+  // char* ip = "/media/yy/Data/pcap/pandora/192.168.20.51/1112-gps.pcap";
   // HesaiLidarSDK psdk(std::string(argv[1]), std::string(""), 1, 40, 0, lidarCallback);
   psdk.start();
   while(true)

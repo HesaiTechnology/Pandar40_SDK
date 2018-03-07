@@ -637,7 +637,7 @@ int RawData::unpack(
           {
             if (gps1 > gps2.gps)
             {
-              printf("Oops , You give me a wrong gps timestamp I think... ,%d , %d\n", gps1, gps2.gps);
+              printf("Oops , You give me a wrong gps timestamp I think... ,%ld , %ld\n", gps1, gps2.gps);
             }
             gps1 = gps2.gps;
             gps2.used = 1;
@@ -646,7 +646,7 @@ int RawData::unpack(
           {
             if (bufferPacket[k].timestamp < lastTimestamp)
             {
-              int gap = (int)lastTimestamp - (int)bufferPacket[k].timestamp;
+              unsigned int gap = lastTimestamp - bufferPacket[k].timestamp;
               // avoid the fake jump... wrong udp order
               if (gap > (10 * 1000)) // 10ms
               {
@@ -654,7 +654,9 @@ int RawData::unpack(
                 // We need to add the offset.
 
                 gps1 += ((lastTimestamp - 20) / 1000000) + 1; // 20us offset , avoid the timestamp of 1000002...
-                printf("There is a round , But gps packet!!! , Change gps1 by manual!!! %d %d %d\n", gps1, lastTimestamp, bufferPacket[k].timestamp);
+                #ifdef DEBUG
+                printf("There is a round , But gps packet!!! , Change gps1 by manual!!! %lu %lu %lu\n", gps1, lastTimestamp, bufferPacket[k].timestamp);
+                #endif
               }
             }
           }
@@ -665,15 +667,14 @@ int RawData::unpack(
           if  (((bufferPacket[k].timestamp < 500000) && gps2.usedHour == 0)|| 
                     (gps1 == 0 && gps2.used == 0))
           {
-            printf("initial gps\n");
-            gps1 = mktime(&gps2.t);
+            gps1 = mktime(&gps2.t) + 1;
             gps2.usedHour = 1;
           }
           else
           {
             if (bufferPacket[k].timestamp < lastTimestamp)
             {
-              int gap = (int)lastTimestamp - (int)bufferPacket[k].timestamp;
+              int gap = lastTimestamp - bufferPacket[k].timestamp;
               // avoid the fake jump... wrong udp order
               if (gap > (10 * 1000)) // 10ms
               {
@@ -681,7 +682,9 @@ int RawData::unpack(
                 // We need to add the offset.
 
                 gps1 += (60*60); // 20us offset , avoid the timestamp of 1000002...
-                printf("There is a round , But gps packet!!! , Change gps1 by manual!!! %d %d %d\n", gps1, lastTimestamp, bufferPacket[k].timestamp);
+                #ifdef DEBUG
+                printf("There is a round , But gps packet!!! , Change gps1 by manual!!! %lu %lu %lu\n", gps1, lastTimestamp, bufferPacket[k].timestamp);
+                #endif
               }
             }
           }
@@ -750,7 +753,7 @@ int RawData::unpack(
                 {
                   if (bufferPacket[k].timestamp < lastTimestamp)
                   {
-                    int gap = (int)lastTimestamp - (int)bufferPacket[k].timestamp;
+                    unsigned int gap = lastTimestamp - bufferPacket[k].timestamp;
                     // avoid the fake jump... wrong udp order
                     if (gap > (10 * 1000)) // 10ms
                     {
@@ -758,7 +761,9 @@ int RawData::unpack(
                       // We need to add the offset.
 
                       gps1 += (60*60); // 20us offset , avoid the timestamp of 1000002...
-                      printf("There is a round , But gps packet!!! , Change gps1 by manual!!! %d %d %d\n", gps1, lastTimestamp, bufferPacket[k].timestamp);
+                      #ifdef DEBUG
+                      printf("There is a round , But gps packet!!! , Change gps1 by manual!!! %lu %lu %lu\n", gps1, lastTimestamp, bufferPacket[k].timestamp);
+                      #endif
                     }
                   }
                 }

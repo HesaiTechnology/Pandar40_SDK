@@ -1,15 +1,17 @@
 #include "hesaiLidarSDK.h"
 #include "hesaiLidarSDK_IN.h"
 
+#ifdef HESAI_WITH_CAMERA 
 HesaiLidarSDK::HesaiLidarSDK(
 	const std::string pandoraIP,
 	const unsigned short pandoraCameraPort,
+	const std::string intrinsicFile,
+	boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
 	const unsigned short lidarRecvPort,
 	const unsigned short gpsRecvPort,
 	const double startAngle,
-	const std::string intrinsicFile,
 	const std::string lidarCorrectionFile,
-	boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
+	
 	boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
 	boost::function<void(unsigned int timestamp)> gpsCallback,
 	const unsigned int laserReturnType,
@@ -19,27 +21,33 @@ HesaiLidarSDK::HesaiLidarSDK(
 	psi = new HesaiLidarSDK_internal(
 		pandoraIP,
 		pandoraCameraPort,
+		intrinsicFile,
+		cameraCallback,
 		lidarRecvPort,
 		gpsRecvPort,
 		startAngle,
-		intrinsicFile,
 		lidarCorrectionFile,
-		cameraCallback,
 		lidarCallback,
 		gpsCallback,
 		laserReturnType, laserCount, pclDataType);
 }
 
+#endif
+
 HesaiLidarSDK::HesaiLidarSDK(
+#ifdef HESAI_WITH_CAMERA 
 	const std::string pandoraIP,
 	const unsigned short pandoraCameraPort,
 	boost::function<void(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)> cameraCallback,
+#endif
 	boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback)
 {
 	psi = new HesaiLidarSDK_internal(
+#ifdef HESAI_WITH_CAMERA 
 		pandoraIP,
 		pandoraCameraPort,
 		cameraCallback,
+#endif
 		lidarCallback);
 }
 
@@ -54,14 +62,16 @@ HesaiLidarSDK::HesaiLidarSDK(
 	const unsigned int pclDataType)
 {
 	psi = new HesaiLidarSDK_internal(
+#ifdef HESAI_WITH_CAMERA 
 		std::string(""),
 		9870,
+		std::string(""),
+		NULL,
+#endif
 		lidarRecvPort,
 		gpsRecvPort,
 		0,
-		std::string(""),
 		lidarCorrectionFile,
-		NULL,
 		lidarCallback,
 		gpsCallback,
 		laserReturnType, laserCount, pclDataType);

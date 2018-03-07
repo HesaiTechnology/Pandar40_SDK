@@ -187,7 +187,7 @@ private:
     int lastBlockEnd;
     int bufferPacketSize;
     int currentPacketStart;
-    int lastTimestamp;
+    unsigned int lastTimestamp;
     int lastAzumith;
     DeviceType deviceType;
     int laserCountType;
