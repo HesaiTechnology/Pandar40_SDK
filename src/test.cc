@@ -11,7 +11,7 @@ FILE* gpsTimestampFile = fopen("gps-timestamp.txt", "w");
 
 double pandoraToSysTimeGap = 0;
 int gpsTimestamp = 0;
-
+#ifdef HESAI_WITH_CAMERA
 void cameraCallback(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)
 {
   // Mat myMat = imread("t.png");
@@ -44,6 +44,15 @@ void cameraCallback(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_i
   // printf("cameraid: %d, timestamp: %lf\n", pic_id, timestamp);
 }
 
+void cameraCallbackForDelay(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)
+{
+  struct timeval ts;
+  gettimeofday(&ts, NULL);
+  fprintf(cameraTimestampFile, "%d,%f\n", pic_id, ts.tv_sec + (double)ts.tv_usec / 1000000  -  pandoraToSysTimeGap - timestamp);
+  // fflush(cameraTimestampFile);
+}
+#endif
+
 
 void gpsCallback(int timestamp)
 {
@@ -55,13 +64,7 @@ void gpsCallback(int timestamp)
   fprintf(gpsTimestampFile, "%d, %f, %f\n", timestamp, ts.tv_sec + ts.tv_usec / 1000000.0, pandoraToSysTimeGap);
 }
 
-void cameraCallbackForDelay(boost::shared_ptr<cv::Mat> matp, double timestamp, int pic_id)
-{
-  struct timeval ts;
-  gettimeofday(&ts, NULL);
-  fprintf(cameraTimestampFile, "%d,%f\n", pic_id, ts.tv_sec + (double)ts.tv_usec / 1000000  -  pandoraToSysTimeGap - timestamp);
-  // fflush(cameraTimestampFile);
-}
+
 
 void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp)
 {
@@ -91,8 +94,8 @@ int main(int argc, char **argv)
   //   cameraCallback, lidarCallback, gpsCallback,
   //   1, 40, 0);
 
-  // HesaiLidarSDK psdk(2368, 10110, std::string("correction.csv"), lidarCallback, gpsCallback, 1, 40, 0);
-  HesaiLidarSDK psdk(std::string("192.168.20.51"), 9870, cameraCallbackForDelay, lidarCallback);
+  HesaiLidarSDK psdk(2368, 10110, std::string("correction.csv"), lidarCallback, gpsCallback, 1, 40, 0);
+  // HesaiLidarSDK psdk(std::string("192.168.20.51"), 9870, cameraCallbackForDelay, lidarCallback);
   // char* ip = "/media/yy/Data/pcap/pandora/192.168.20.51/1112-gps.pcap";
   // HesaiLidarSDK psdk(std::string(argv[1]), std::string(""), 1, 40, 0, lidarCallback);
   psdk.start();

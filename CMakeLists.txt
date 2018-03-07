@@ -8,18 +8,37 @@ find_package(PCL REQUIRED )
 set (LINK_LIBRARY_PLUS "")
 
 option(Camera_Enable "Enable Camera Driver, For Pandora" OFF)
-set (CMAKE_CXX_FLAGS "-g -fPIC")
+option(Debug_Enable "Enable Camera Driver, For Pandora" OFF)
 
+set (CMAKE_CXX_FLAGS "-fPIC")
+set (CMAKE_CXX_STANDARD 11)
+
+set (SRC 
+	src/calibration.cc
+	src/input.cc
+	src/rawdata.cc
+	src/hesaiLidarSDK_IN.cc
+	src/hesaiLidarSDK.cc
+	)
+
+add_subdirectory(src/pandora_camera_client)
 if(Camera_Enable)
 	message("Build Camera")
 	find_package( OpenCV REQUIRED )
 	add_definitions("-DHESAI_WITH_CAMERA")
 	set (LINK_LIBRARY_PLUS ${OpenCV_LIBS})
+
+	set (SRC 
+		${SRC}
+		src/utilities.cc
+		)
 endif(Camera_Enable)
 
-set (CMAKE_CXX_STANDARD 11)
-
-set (CMAKE_C_FLAGS "-g -fPIC")
+if(Debug_Enable)
+	message("Build Debug")
+	add_definitions("-DDebug")
+	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+endif(Debug_Enable)
 
 
 include_directories(
@@ -29,33 +48,32 @@ include_directories(
 	${PCL_INCLUDE_DIRS}
 )
 
-add_subdirectory(src/pandora_camera_client)
-add_subdirectory(src/lib)
-
-#link_directories(${PCL_LIBRARY_DIRS})
-
-#add_subdirectory(test)
 
 add_library( ${PROJECT_NAME} SHARED
-	src/hesaiLidarSDK.cc
+	${SRC}
 )
 
 target_link_libraries(${PROJECT_NAME}
-	pandora_sdk_in
-	pcap
-	yaml-cpp
-	${Boost_LIBRARIES}
-	${PCL_COMMON_LIBRARIES} 
-	${PCL_IO_LIBRARIES}
-	${LINK_LIBRARY_PLUS}
+		pandora_client
+		pcap
+		yaml-cpp
+		${Boost_LIBRARIES}
+		${PCL_COMMON_LIBRARIES} 
+		${PCL_IO_LIBRARIES}
+		${LINK_LIBRARY_PLUS}
 )
 
-add_executable(pandora_sdk_test 
-	src/test.cc
-)
-target_link_libraries(pandora_sdk_test 
-	${PROJECT_NAME}
-	${Boost_LIBRARIES}
-	${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES}
-	${LINK_LIBRARY_PLUS}
-)
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+	
+
+	add_executable(pandora_sdk_test 
+		src/test.cc
+	)
+	target_link_libraries(pandora_sdk_test 
+		${PROJECT_NAME}
+		${Boost_LIBRARIES}
+		${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES}
+		${LINK_LIBRARY_PLUS}
+	)
+
+endif(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
