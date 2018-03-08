@@ -1,3 +1,3 @@
 [submodule "src/pandora_camera_client"]
 	path = src/pandora_camera_client
-	url = ssh://git@code.hesaitech.cn:10022/Philip_Puma/PandoraCameraClient.git
+	url = https://github.com/HesaiTechnology/PandoraCameraClient.git 
