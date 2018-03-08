@@ -41,6 +41,7 @@ void HesaiLidarSDK_internal::init(
 	input.reset(new pandar_pointcloud::Input(pcapPath, laserReturnType));
 	data_.reset(new pandar_rawdata::RawData(lidarCorrectionFile, laserReturnType, laserCount, pclDataType));
 	readPacpThread = 0;
+	lidarRecvThread = 0;
 	lidarProcessThread = 0;
 	lidarRotationStartAngle = 0;
 	gps1 = 0;
@@ -48,6 +49,10 @@ void HesaiLidarSDK_internal::init(
 	gps2.used = 1;
 	gps2.usedHour = 1;
 	userLidarCallback = lidarCallback;
+#ifdef HESAI_WITH_CAMERA
+	pandoraCameraClient = NULL;
+	processPicThread = 0;
+#endif
 
 	sem_init(&lidarSem, 0, 0);
 	pthread_mutex_init(&lidarLock, NULL);
@@ -114,6 +119,7 @@ void HesaiLidarSDK_internal::init(
 
 	lidarRecvThread = 0;
 	lidarProcessThread = 0;
+	readPacpThread = 0;
 	
 	
 
@@ -263,7 +269,7 @@ void HesaiLidarSDK_internal::readPcapFile()
 
 		if (rc == -1)
 		{
-			printf("something wrong with input.getPacket\n");
+			usleep(HesaiLidarSDK_PCAP_TIME_INTERVAL);
 			continue;
 		}
 		if (rc == 1)
