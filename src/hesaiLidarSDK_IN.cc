@@ -476,7 +476,6 @@ void HesaiLidarSDK_internal::processPic()
 		ts.tv_sec += 1;
 		if (sem_timedwait(&picSem, &ts) == -1)
 		{
-			printf("no pic\n");
 			continue;
 		}
 

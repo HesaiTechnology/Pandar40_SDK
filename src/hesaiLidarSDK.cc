@@ -14,9 +14,9 @@ HesaiLidarSDK::HesaiLidarSDK(
 	
 	boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
 	boost::function<void(unsigned int timestamp)> gpsCallback,
-	const unsigned int laserReturnType,
+	const HesaiLidarRawDataSturct laserReturnType,
 	const unsigned int laserCount,
-	const unsigned int pclDataType)
+	const HesaiLidarPCLDataType pclDataType)
 {
 	psi = new HesaiLidarSDK_internal(
 		pandoraIP,
@@ -29,7 +29,7 @@ HesaiLidarSDK::HesaiLidarSDK(
 		lidarCorrectionFile,
 		lidarCallback,
 		gpsCallback,
-		laserReturnType, laserCount, pclDataType);
+		(unsigned int)laserReturnType, laserCount, (unsigned int)pclDataType);
 }
 
 #endif
@@ -57,9 +57,9 @@ HesaiLidarSDK::HesaiLidarSDK(
 	const std::string lidarCorrectionFile,
 	boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
 	boost::function<void(unsigned int timestamp)> gpsCallback,
-	const unsigned int laserReturnType,
+	const HesaiLidarRawDataSturct laserReturnType,
 	const unsigned int laserCount,
-	const unsigned int pclDataType)
+	const HesaiLidarPCLDataType pclDataType)
 {
 	psi = new HesaiLidarSDK_internal(
 #ifdef HESAI_WITH_CAMERA 
@@ -74,21 +74,21 @@ HesaiLidarSDK::HesaiLidarSDK(
 		lidarCorrectionFile,
 		lidarCallback,
 		gpsCallback,
-		laserReturnType, laserCount, pclDataType);
+		(unsigned int)laserReturnType, laserCount, (unsigned int)pclDataType);
 }
 
 HesaiLidarSDK::HesaiLidarSDK(
 		const std::string pcapPath,
 		const std::string lidarCorrectionFile,
-		const unsigned int laserReturnType,
+		const HesaiLidarRawDataSturct laserReturnType,
 		const unsigned int laserCount,
-		const unsigned int pclDataType,
+		const HesaiLidarPCLDataType pclDataType,
 		boost::function<void(boost::shared_ptr<PPointCloud> pcloudp, double timestamp)> lidarCallback)
 {
 	psi = new HesaiLidarSDK_internal(
 		pcapPath,
 		lidarCorrectionFile,
-		laserReturnType, laserCount, pclDataType,
+		(unsigned int)laserReturnType, laserCount, (unsigned int)pclDataType,
 		lidarCallback);
 }
 

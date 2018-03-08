@@ -11,6 +11,16 @@
 #include <pcl/point_types.h>
 #include "point_types.h"
 
+typedef enum{
+	HESAI_LIDAR_PCL_DATA_TYPE_REDUCED = 0, // Don't include the useless points such as xyz(0,0,0) or xyz(na/na/na)
+	HESAI_LIDAR_PCL_DATA_TYPE_ALIGNMENT = 1, // Align the points , such as 1800x40 (1800 indicates the frequency of each laser one circle)
+}HesaiLidarPCLDataType;
+
+typedef enum{
+	HESAI_LIDAR_RAW_DATA_STRCUT_SINGLE_RETURN = 0,  // Pandar40
+	HESAI_LIDAR_RAW_DATA_STRCUT_DUAL_RETURN = 1,    // Pandar40-AC , Pandar40P
+}HesaiLidarRawDataSturct;
+
 class HesaiLidarSDK_internal;
 
 class HesaiLidarSDK
@@ -29,9 +39,9 @@ public:
 		const std::string lidarCorrectionFile, 									// lidar的标定文件路径，为空时，将使用默认参数
 		boost::function<void(boost::shared_ptr<PPointCloud> pcloudp, double timestamp)> lidarCallback, 				// lidar的callback函数
 		boost::function<void(unsigned int timestamp)> gpsCallback, 		// gps数据的callback函数，可为NULL.timestamp为当前gps的时间戳
-		const unsigned int laserReturnType,											// 回波类型,0为单回波,1为双回波.
+		const HesaiLidarRawDataSturct dataStruct,											// 回波类型,0为单回波,1为双回波.
 		const unsigned int laserCount,													// lidar的线数量
-		const unsigned int pclDataType);												// 返回给lidarcallback的pcl数据的格式类型.0是以block遍历生成的数据,1是以laserId遍历生成的数据
+		const HesaiLidarPCLDataType pclDataType);												// 返回给lidarcallback的pcl数据的格式类型.0是以block遍历生成的数据,1是以laserId遍历生成的数据
 #endif
 
 	HesaiLidarSDK(
@@ -48,17 +58,17 @@ public:
 		const std::string lidarCorrectionFile,
 		boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
 		boost::function<void(unsigned int timestamp)> gpsCallback,
-		const unsigned int laserReturnType,
+		const HesaiLidarRawDataSturct laserReturnType,
 		const unsigned int laserCount,
-		const unsigned int pclDataType);
+		const HesaiLidarPCLDataType pclDataType);
 
 
 	HesaiLidarSDK(
 		const std::string pcapPath,
 		const std::string lidarCorrectionFile,
-		const unsigned int laserReturnType,
+		const HesaiLidarRawDataSturct laserReturnType,
 		const unsigned int laserCount,
-		const unsigned int pclDataType,
+		const HesaiLidarPCLDataType pclDataType,
 		boost::function<void(boost::shared_ptr<PPointCloud> pcloudp, double timestamp)> lidarCallback);
 
 	HesaiLidarSDK(){};
