@@ -1,8 +1,9 @@
 
+
 #include "hesaiLidarSDK_IN.h"
+#ifdef HESAI_WITH_CAMERA 
 #include "utilities.h"
 
-#ifdef HESAI_WITH_CAMERA 
 Size HesaiLidarSDK_IMAGE_SIZE(HesaiLidarSDK_IMAGE_WIDTH, HesaiLidarSDK_IMAGE_HEIGHT);
 #endif
 
