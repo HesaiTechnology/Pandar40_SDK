@@ -21,3 +21,16 @@ cd build
  (Lidar )cmake ..  / cmake -DCamera_Enable=ON .. (Lidar + Camera)
 make -j4
 ```
+
+# Add to your project
+```
+add_subdirectory(<path to>HesaiLidarSDK)
+(Only Camera+Lidar) add_definitions("-DHESAI_WITH_CAMERA")
+
+target_link_libraries(${PROJECT_NAME}
+  ...
+  hesaiLidarSDK
+  ...
+}
+
+```
