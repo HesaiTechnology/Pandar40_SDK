@@ -10,7 +10,7 @@ set (LINK_LIBRARY_PLUS "")
 option(Camera_Enable "Enable Camera Driver, For Pandora" OFF)
 option(Debug_Enable "Enable Camera Driver, For Pandora" OFF)
 
-set (CMAKE_CXX_FLAGS "-fPIC")
+set (CMAKE_CXX_FLAGS "-fPIC -std=c++11")
 set (CMAKE_CXX_STANDARD 11)
 
 set (SRC 
@@ -26,8 +26,8 @@ if(Camera_Enable)
 	message("Build Camera")
 	find_package( OpenCV REQUIRED )
 	add_definitions("-DHESAI_WITH_CAMERA")
-	set (LINK_LIBRARY_PLUS ${OpenCV_LIBS})
-
+	set (LINK_LIBRARY_PLUS "${OpenCV_LIBS}")
+	set (JPEG_LIB "jpeg")
 	set (SRC 
 		${SRC}
 		src/utilities.cc
@@ -57,6 +57,7 @@ target_link_libraries(${PROJECT_NAME}
 		pandora_client
 		pcap
 		yaml-cpp
+	   	${JPEG_LIB}
 		${Boost_LIBRARIES}
 		${PCL_COMMON_LIBRARIES} 
 		${PCL_IO_LIBRARIES}
