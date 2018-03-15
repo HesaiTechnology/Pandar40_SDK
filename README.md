@@ -20,6 +20,7 @@ mkdir build
 cd build 
  (Lidar )cmake ..  / cmake -DCamera_Enable=ON .. (Lidar + Camera)
 make -j4
+make install; # Generate SDK DIR for HesaiLidarSDK, include (1) Headers (2) libhesaiLidarSDK.so in build/SDK
 ```
 
 # Add to your project
@@ -36,5 +37,6 @@ target_link_libraries(${PROJECT_NAME}
 
 ## Note
 ```
-(Only Camera+Lidar) add_definitions("-DHESAI_WITH_CAMERA")
+1. Issue when compiling. Please Add '-DCamera_Enable=ON'
+cmake -DCamera_Enable=ON <your project DIR>.
 ```
