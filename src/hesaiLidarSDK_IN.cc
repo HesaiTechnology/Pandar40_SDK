@@ -452,6 +452,13 @@ void HesaiLidarSDK_internal::processGps(HS_LIDAR_L40_GPS_Packet &gpsMsg)
 			gps2.usedHour = 0;
 		}
 
+		// TODO: if the jump is too big(24 * 3600 = one day) , We regard this GPS is reliable. use it.
+		if((curlidarLastGPSHourSecond - lidarLastGPSHourSecond ) > (24 * 3600))
+		{
+			gps1 = 0;
+			gps2.usedHour = 0;
+		}
+
 		memcpy(&gps2.t, &t, sizeof(struct tm));
 		gps2.t.tm_min = 0;
 		gps2.t.tm_sec = 0;
