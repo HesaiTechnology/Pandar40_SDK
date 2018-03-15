@@ -38,5 +38,6 @@ target_link_libraries(${PROJECT_NAME}
 ## Note
 ```
 1. Issue when compiling. Please Add '-DCamera_Enable=ON'
+add 'add_definitions(-DHESAI_WITH_CAMERA)' to your CMakeLists.txt
 cmake -DCamera_Enable=ON <your project DIR>.
 ```
