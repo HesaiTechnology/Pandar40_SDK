@@ -428,7 +428,7 @@ void HesaiLidarSDK_internal::processGps(HS_LIDAR_L40_GPS_Packet &gpsMsg)
 	t.tm_sec = 0;
 	t.tm_min = 0;
 
-	t.tm_hour = gpsMsg.hour;
+	t.tm_hour = gpsMsg.hour-1;
 	t.tm_mday = gpsMsg.day;
 	t.tm_mon = gpsMsg.month - 1;
 	t.tm_year = gpsMsg.year + 2000 - 1900;
