@@ -596,23 +596,36 @@ int RawData::unpack(
           lastAzumith = bufferPacket[i].blocks[j].azimuth;
           continue;
         }
-        if (lastAzumith > bufferPacket[i].blocks[j].azimuth)
-        {       
-          if (lidarRotationStartAngle <= bufferPacket[i].blocks[j].azimuth)
-          {
+
+        int azimuthGap = 0; /* To do */
+        if(lastAzumith > bufferPacket[i].blocks[j].azimuth) {
+          azimuthGap = static_cast<int>(bufferPacket[i].blocks[j].azimuth) + (36000 - static_cast<int>(lastAzumith));
+        } else {
+          azimuthGap = static_cast<int>(bufferPacket[i].blocks[j].azimuth) - static_cast<int>(lastAzumith);
+        }
+
+        if (lastAzumith != bufferPacket[i].blocks[j].azimuth &&
+            azimuthGap < 600 /* 6 degree*/) {
+          /* for all the blocks */
+          if ((lastAzumith > bufferPacket[i].blocks[j].azimuth &&
+               lidarRotationStartAngle <= bufferPacket[i].blocks[j].azimuth) ||
+              (lastAzumith < lidarRotationStartAngle &&
+               lidarRotationStartAngle <= bufferPacket[i].blocks[j].azimuth)) {
+
+            static int count = 0;
+            count++;
+
+            if (i < 300)
+            {
+              printf("%d frame size %d last ts %d new ts %d\n", count, i, lastAzumith, bufferPacket[i].blocks[j].azimuth);
+            }
             currentBlockEnd = j;
             hasAframe = 1;
             currentPacketEnd = i;
             break;
           }
         }
-        else if (lastAzumith < lidarRotationStartAngle && lidarRotationStartAngle <= bufferPacket[i].blocks[j].azimuth)
-        {
-          currentBlockEnd = j;
-          hasAframe = 1;
-          currentPacketEnd = i;
-          break;
-        }
+
         lastAzumith = bufferPacket[i].blocks[j].azimuth;
       }
     }
