@@ -2,12 +2,17 @@ cmake_minimum_required(VERSION 2.8)
 project(hesaiLidarSDK)
 
 
-find_package( Boost REQUIRED )
+find_package(Boost REQUIRED )
 find_package(PCL REQUIRED )
 
 set (LINK_LIBRARY_PLUS "")
 
-option(Camera_Enable "Enable Camera Driver, For Pandora" OFF)
+if(ENABLE_SAMPLE)
+	option(Camera_Enable "Enable Camera Driver, For Pandora" ON)
+else(NOT ENABLE_SAMPLE)
+	option(Camera_Enable "Enable Camera Driver, For Pandora" OFF)
+endif()
+
 option(Debug_Enable "Enable Camera Driver, For Pandora" OFF)
 
 set (CMAKE_CXX_FLAGS "-fPIC -std=c++11")
@@ -20,6 +25,11 @@ set (SRC
 	src/hesaiLidarSDK_IN.cc
 	src/hesaiLidarSDK.cc
 	)
+
+#add_custom_target(build-time-make-directory ALL 
+#	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lib)
+#message (STATUS "Target library dir == ${CMAKE_BINARY_DIR}/lib")
+#message (STATUS "build-time-make-directory == ${build-time-make-directory}")
 
 add_subdirectory(src/pandora_camera_client)
 if(Camera_Enable)
@@ -48,6 +58,9 @@ include_directories(
 	${PCL_INCLUDE_DIRS}
 )
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_library( ${PROJECT_NAME} SHARED
 	${SRC}
@@ -79,10 +92,18 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 
 endif(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 
+if (ENABLE_SAMPLE)
+	add_subdirectory(sample/pandar40)
 
-set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/SDK)
+	add_subdirectory(sample/pandar40p)
+
+	add_subdirectory(sample/pandora)
+
+endif()
+
+#set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/SDK)
 
 install(PROGRAMS include/hesaiLidarSDK.h DESTINATION include)
 install(PROGRAMS include/point_types.h DESTINATION include)
 install(DIRECTORY sample DESTINATION .)
-install(PROGRAMS ${CMAKE_BINARY_DIR}/lib${PROJECT_NAME}.so DESTINATION lib)
+install(PROGRAMS ${CMAKE_BINARY_DIR}/lib/lib${PROJECT_NAME}.so DESTINATION lib)
