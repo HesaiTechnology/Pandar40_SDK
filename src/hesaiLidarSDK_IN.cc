@@ -119,6 +119,8 @@ void HesaiLidarSDK_internal::init(
 			needRemapPicMat = false;
 	}
 	pandoraCameraClient = NULL;
+#else
+	useMode = PandoraUseModeOnlyLidar;
 #endif
 
 	userLidarCallback = lidarCallback;
