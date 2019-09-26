@@ -55,6 +55,7 @@ public:
 	HesaiLidarSDK(
 		const unsigned short lidarRecvPort,
 		const unsigned short gpsRecvPort,
+                const double startAngle,
 		const std::string lidarCorrectionFile,
 		boost::function<void(boost::shared_ptr<PPointCloud> cld, double timestamp)> lidarCallback,
 		boost::function<void(unsigned int timestamp)> gpsCallback,

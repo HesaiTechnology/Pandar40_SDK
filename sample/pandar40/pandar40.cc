@@ -15,6 +15,7 @@ int main(int argc, char **argv)
     HesaiLidarSDK psdk(
 	8080				/* lidar data port */, 
 	8308				/* gps data port */, 
+        0                               /* start angle*/,
 	std::string("correction.csv")	/* calibration file of lidar */, 
 	lidarCallback 			/* point cloud data call back */, 
 	gpsCallback 			/* gps data callback */, 
