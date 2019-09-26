@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     lidarCallback, gpsCallback,
     HESAI_LIDAR_RAW_DATA_STRCUT_DUAL_RETURN, 40, HESAI_LIDAR_PCL_DATA_TYPE_REDUCED);
 #else
-  HesaiLidarSDK psdk(2368, 10110, std::string("correction.csv"), lidarCallback, gpsCallback, 
+  HesaiLidarSDK psdk(2368, 10110, 0, std::string("correction.csv"), lidarCallback, gpsCallback,
       HESAI_LIDAR_RAW_DATA_STRCUT_DUAL_RETURN, 40, HESAI_LIDAR_PCL_DATA_TYPE_REDUCED);
 #endif
   psdk.start();
