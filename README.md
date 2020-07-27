@@ -1,7 +1,7 @@
 # Dependencies
 ## Clone
 ```
-	git clone https://github.com/HesaiTechnology/HesaiLidarSDK.git --recursive
+	git clone https://github.com/HesaiTechnology/HesaiLidar_SDK.git --recursive
 ```
 
 ## Lidar only
