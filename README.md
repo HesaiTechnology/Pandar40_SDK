@@ -3,43 +3,12 @@
 ```
 	git clone https://github.com/HesaiTechnology/HesaiLidar_SDK.git --recursive
 ```
-
-## Lidar only
-```
-	sudo apt install cmake libproj-dev libpcap-dev libboost-all-dev libyaml-cpp-dev libjpeg-dev libgdal-dev libpq-dev libvtk6-dev libvtk6-qt-dev libpcl-dev 
-```
-
-## Camera + Lidar
-
-```
-	sudo apt install cmake libproj-dev libcv-dev libpcap-dev libboost-all-dev libyaml-cpp-dev libjpeg-dev libgdal-dev libpq-dev libvtk6-dev libvtk6-qt-dev libpcl-dev 
-```
-# build
-
-Make a directory somewhere out of your source directory. Let's say:
+# Build
 ```
 	mkdir build
 	cd build 
-```
-Lidar only
-```
-	cmake <path to>/HesaiLidarSDK/  
-```
-Lidar + Camera
-```
-	cmake -DCamera_Enable=ON <path to>/HesaiLidarSDK/
-```
-Lidar + Camera + Samples
-```
-	cmake <path to>/HesaiLidarSDK/ -DENABLE_SAMPLE=ON
-```
-Then build the projects,
-```
-	make -j$(nproc)
-```
-Install HesaiLidarSDK to CMAKE_INSTALL_PREFIX, include (1) Headers (2) libhesaiLidarSDK.so in build/lib (3) binaries in build/bin
-```
-	make install
+	cmake ..
+	make
 ```
 
 # Add to your project
@@ -53,16 +22,3 @@ Install HesaiLidarSDK to CMAKE_INSTALL_PREFIX, include (1) Headers (2) libhesaiL
 	)
 
 ```
-
-# Note
-
-##1. When compiling with camera functions, 
-Add this line to your CMakeLists.txt
-```
-	add_definitions(-DHESAI_WITH_CAMERA)
-```
-And add '-DCamera_Enable=ON' to your cmake command line,
-``` 
-	cmake -DCamera_Enable=ON <your project source directory>
-```
-
