@@ -14,7 +14,7 @@
 ```
 	sudo apt install cmake libproj-dev libcv-dev libpcap-dev libboost-all-dev libyaml-cpp-dev libjpeg-dev libgdal-dev libpq-dev libvtk6-dev libvtk6-qt-dev libpcl-dev 
 ```
-# Out of source build
+# build
 
 Make a directory somewhere out of your source directory. Let's say:
 ```
