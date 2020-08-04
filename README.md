@@ -1,7 +1,7 @@
 # Dependencies
 ## Clone
 ```
-	git clone https://github.com/HesaiTechnology/HesaiLidar_SDK.git --recursive
+	git clone https://github.com/HesaiTechnology/Pandar40_SDK.git --recursive
 ```
 # Build
 ```
@@ -13,11 +13,11 @@
 
 # Add to your project
 ```
-	add_subdirectory(<path to>HesaiLidarSDK)
+	add_subdirectory(<path to>Pandar40_SDK)
 
 	target_link_libraries(${YOUR_PROJECT_NAME}
 		...
-		hesaiLidarSDK
+		Pandar40_SDK
 		...
 	)
 
