@@ -1,7 +1,7 @@
 # HesaiLidar_General_SDK  
 
 ## About the project  
-HesaiLidar_General_SDK project is the software development kit for:**Pandar40** LiDAR manufactured by Hesai Technology.
+HesaiLidar_General_SDK project is the software development kit for **Pandar40** LiDAR manufactured by Hesai Technology.
 ## Environment and Dependencies
 **System environment requirement: Linux + G++ 7.0 or above**   
 **Library Dependencies: libpcap-dev + libyaml-cpp-dev**  
@@ -22,12 +22,12 @@ $ make
 ```  
 # Add to your project
 ```
-	add_subdirectory(<path to>Pandar40_SDK)
+add_subdirectory(<path to>Pandar40_SDK)
 
-	target_link_libraries(${YOUR_PROJECT_NAME}
-		...
-		Pandar40_SDK
-		...
-	)
+target_link_libraries(${YOUR_PROJECT_NAME}
+	...
+	Pandar40_SDK
+	...
+)
 
 ```
